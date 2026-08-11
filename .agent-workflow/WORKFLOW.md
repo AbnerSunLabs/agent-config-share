@@ -1,6 +1,7 @@
 # 跨 Agent 个人研发工作流
 
-> 本文件是研发流程的唯一事实源。任何 Agent、Skill、插件或适配文件都不得覆盖这里定义的阶段、授权边界和完成标准。
+> 本文件是研发流程的唯一事实源。任何 Agent、Skill、插件或适配文件都不得覆盖这里定义的阶段、授权边界和完成标准。  
+> 各宿主「如何实现同一职责」见同目录 `CAPABILITIES.md`；宿主专属插件名不得写入本文件。
 
 ## 1. 启动顺序
 
@@ -11,22 +12,38 @@
 3. 当前任务文件 `.agent-workflow/tasks/<task-id>.md`
 4. 项目自身声明的架构、测试和贡献文档
 
+需要对照当前宿主用什么工具落地时，再读 `.agent-workflow/CAPABILITIES.md`（非每次任务强制全文精读）。
+
 如果 `PROJECT.md` 或任务文件不存在，先基于对应模板创建；不得依赖聊天上下文代替持久化任务事实。
+
+**默认启动：** 入口文件已对齐的仓库中，收到非琐碎开发任务即按本文件执行（探索 → 规划设计写入任务文件 → `awaiting_approval` → 停止改业务源码）；用户无需重复粘贴启动话术。批准可用简短表述（如「批准，L2」）。
+
+## 1.1 冲突优先级
+
+规则冲突时按以下顺序（高 → 低）：
+
+1. 宿主安全审批与环境强制限制（不可绕过）
+2. 本文件定义的人工门禁、授权边界与 Definition of Done；以及任务中**已批准**的执行授权包
+3. 用户即时口头指令：若改变目标、范围、验收或交付级别，必须回到 `drafting` 更新授权包并重新确认；不得解释为「可以跳过门禁」
+4. `.agent-workflow/PROJECT.md` 与当前任务设计
+5. 宿主适配文件（Codex 的 `AGENTS.md` / Cursor Rules / `.starFactory/` 等）
+
+适配层只能填充 `CAPABILITIES.md` 中的实现格子，不能改写本文件的阶段与完成标准。Claude Code 不在当前使用宿主之列，其材料仅作设计参考，见 `docs/reference/claude/`。
 
 ## 2. 基础状态
 
-| 状态 | 含义 | 允许的下一状态 |
-|---|---|---|
-| `drafting` | 探索、规划和设计 | `awaiting_approval`, `blocked` |
-| `awaiting_approval` | 等待人工确认执行授权包 | `approved`, `drafting`, `blocked` |
-| `approved` | 授权基线已经确认 | `implementing`, `blocked` |
-| `implementing` | 在授权范围内修改 | `validating`, `blocked` |
-| `validating` | 执行真实验证 | `reviewing`, `implementing`, `blocked` |
-| `reviewing` | 独立、只读 Review | `fixing`, `ready_for_delivery`, `blocked` |
-| `fixing` | 修复 Review 或最终检查问题 | `validating`, `blocked` |
-| `ready_for_delivery` | 执行 DoD 和交付检查 | `fixing`, `done`, `blocked` |
-| `done` | 已按授权级别完成交付 | 终态 |
-| `blocked` | 需要人工决策或外部条件变化 | 恢复到被阻断前状态或终止 |
+| 状态                 | 含义                       | 允许的下一状态                            |
+| -------------------- | -------------------------- | ----------------------------------------- |
+| `drafting`           | 探索、规划和设计           | `awaiting_approval`, `blocked`            |
+| `awaiting_approval`  | 等待人工确认执行授权包     | `approved`, `drafting`, `blocked`         |
+| `approved`           | 授权基线已经确认           | `implementing`, `blocked`                 |
+| `implementing`       | 在授权范围内修改           | `validating`, `blocked`                   |
+| `validating`         | 执行真实验证               | `reviewing`, `implementing`, `blocked`    |
+| `reviewing`          | 独立、只读 Review          | `fixing`, `ready_for_delivery`, `blocked` |
+| `fixing`             | 修复 Review 或最终检查问题 | `validating`, `blocked`                   |
+| `ready_for_delivery` | 执行 DoD 和交付检查        | `fixing`, `done`, `blocked`               |
+| `done`               | 已按授权级别完成交付       | 终态                                      |
+| `blocked`            | 需要人工决策或外部条件变化 | 恢复到被阻断前状态或终止                  |
 
 禁止跳过 `awaiting_approval → approved` 门禁。Fast Path 可以简化规划和设计内容，但不能跳过人工确认。
 
@@ -121,13 +138,13 @@
 
 ### 5.3 独立 Review
 
-Review 只读执行，优先级如下：
+Review 只读执行，优先级如下（具体宿主工具见 `CAPABILITIES.md` 的 `review` 行）：
 
 1. 独立 Reviewer Agent。
 2. 新上下文或新会话 Reviewer。
 3. 同一执行者按 `REVIEW_TEMPLATE.md` 串行复审。
 
-Review 必须核对真实 diff、任务验收条件和验证证据。每条 Finding 必须包含位置、影响、证据、优先级和置信度。
+Review 必须核对真实 diff、任务验收条件和验证证据。每条 Finding 必须包含位置、影响、证据、优先级和置信度。不得引入 Claude Code 或其它非当前宿主的专属插件来完成 Review。
 
 ### 5.4 修复与复验
 
@@ -158,12 +175,12 @@ Review 必须核对真实 diff、任务验收条件和验证证据。每条 Find
 
 ## 7. 交付级别
 
-| 级别 | 允许操作 |
-|---|---|
-| L1 | 本地修改和验证 |
-| L2 | L1 + 原子 Git Commit |
-| L3 | L2 + 推送功能分支和创建或更新 PR |
-| L4 | L3 + 合并或部署 |
+| 级别 | 允许操作                         |
+| ---- | -------------------------------- |
+| L1   | 本地修改和验证                   |
+| L2   | L1 + 原子 Git Commit             |
+| L3   | L2 + 推送功能分支和创建或更新 PR |
+| L4   | L3 + 合并或部署                  |
 
 默认 L2。L3、L4 必须在执行授权包中逐次明确。任何级别都不能绕过宿主环境的安全审批。
 
@@ -224,4 +241,3 @@ Review 必须核对真实 diff、任务验收条件和验证证据。每条 Find
 - 已验证的完整方法进入 Skill。
 - 跨项目稳定原则进入本文件。
 - 一次性偏好保留在项目或任务级。
-

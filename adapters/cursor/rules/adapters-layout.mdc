@@ -1,0 +1,20 @@
+---
+description: Codex/Cursor/starFactory 适配源一律在 adapters/；开发时按宿主目录约定对齐路径
+alwaysApply: true
+---
+
+# 适配层目录约定
+
+## 原则（必须遵守）
+
+1. Codex、Cursor、starFactory 的适配文件，**一律只放在** `adapters/<host>/`。
+2. 不要在本工作流仓库根目录散落 `.cursor/`、`.starFactory/` 或把宿主入口当成源文件维护。
+3. **在要用某个 Agent 开发的仓库里**，按该 Agent 的目录约定做路径对齐（复制或链接）：
+
+| 宿主        | 源                                          | 对齐到                              |
+| ----------- | ------------------------------------------- | ----------------------------------- |
+| Codex       | `adapters/codex/AGENTS.md`                  | `AGENTS.md`                         |
+| Cursor      | `adapters/cursor/rules/cursor-workflow.mdc` | `.cursor/rules/cursor-workflow.mdc` |
+| starFactory | `adapters/starFactory/AGENTS.md`            | `.starFactory/AGENTS.md`            |
+
+详情见 `adapters/README.md`。

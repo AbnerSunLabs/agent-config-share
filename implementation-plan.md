@@ -1,10 +1,10 @@
 # 个人 AI 研发工作流 V1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **说明：** 本文是本仓库 V1 **建设记录**，不是业务项目接入指南。接入请看 `README.md`。下列 Task 已全部完成；后续结构演进（能力矩阵、adapters 分目录）以仓库当前文件为准。
 
 **Goal:** 交付一套以“人工确认规划与设计，AI 自主完成实现、Review、修复、验证和 L2 交付”为核心的跨 Agent 个人研发工作流 V1。
 
-**Architecture:** 使用 Agent 无关的 Markdown 流程契约作为唯一事实源，并通过 Codex、Claude Code、Cursor 的薄适配文件接入。Claude 官方插件只映射到能力接口，不进入核心流程依赖；状态引擎、Hooks 和 Plugin 打包作为后续迭代能力。
+**Architecture:** 使用 Agent 无关的 Markdown 流程契约作为唯一事实源，并通过 Codex、Cursor、starFactory 的薄适配文件接入。Claude Code 仅作设计参考（`docs/reference/claude/`），不进入当前宿主与核心流程依赖；状态引擎、Hooks 和 Plugin 打包作为后续迭代能力。
 
 **Tech Stack:** Markdown、Git、Agent 规则文件；V1 不引入运行时依赖、数据库或自动化引擎。
 
@@ -13,7 +13,7 @@
 - 规划与设计完成后必须等待一次人工确认，确认后 AI 自动推进到最终交付。
 - 默认交付级别为 L2：本地实现、完整验证、原子 Git Commit；禁止自动 Push、创建 PR、合并或部署。
 - 没有真实验证证据时，禁止把任务标记为完成。
-- 核心流程不得依赖 Codex、Claude Code、Cursor 的专属命令或插件。
+- 核心流程不得依赖任一宿主的专属命令或插件（含 Claude；Claude 本就不在当前使用列表）。
 - 删除、关键配置、数据库迁移、凭证、外部发布等未授权高风险操作必须暂停并确认。
 - V1 保持纯文档、无依赖、可复制，不实现 SQLite 状态机、Hooks 或多 Agent 调度器。
 
@@ -22,10 +22,12 @@
 ### Task 1: 最终设计与演进路线
 
 **Files:**
+
 - Create: `docs/personal-ai-development-workflow-v1-design.md`
 - Create: `docs/evolution-roadmap.md`
 
 **Interfaces:**
+
 - Consumes: 已确认的人工决策边界、L2 默认交付、两份参考文档中的阶段与插件能力分类。
 - Produces: 后续核心流程、模板和 Agent 适配器共同遵循的架构基线。
 
@@ -46,10 +48,12 @@
 ### Task 2: 跨 Agent 核心流程契约
 
 **Files:**
+
 - Create: `.agent-workflow/WORKFLOW.md`
 - Create: `.agent-workflow/PROJECT.template.md`
 
 **Interfaces:**
+
 - Consumes: Task 1 定义的状态、门禁、停止条件和 DoD。
 - Produces: 所有 Agent 必须读取并执行的唯一核心流程，以及每个项目需要填写的真实命令和风险配置。
 
@@ -70,10 +74,12 @@
 ### Task 3: 任务与 Review 模板
 
 **Files:**
+
 - Create: `.agent-workflow/TASK_TEMPLATE.md`
 - Create: `.agent-workflow/REVIEW_TEMPLATE.md`
 
 **Interfaces:**
+
 - Consumes: Task 2 的状态和 DoD。
 - Produces: 单任务事实源和统一 Finding 格式，供实现者、Reviewer 与最终交付复用。
 
@@ -93,15 +99,19 @@
 
 ### Task 4: Agent 薄适配入口
 
-**Files:**
-- Create: `adapters/AGENTS.md`
-- Create: `adapters/CLAUDE.md`
-- Create: `adapters/cursor-workflow.mdc`
-- Create: `docs/claude-plugin-mapping.md`
+**Files（历史路径；当前仓库已演进为）：**
+
+- `adapters/codex/AGENTS.md`
+- `adapters/cursor/rules/cursor-workflow.mdc`（Cursor；开发仓库对齐到 `.cursor/rules/`）
+- `adapters/starFactory/AGENTS.md`（starFactory；开发仓库对齐到 `.starFactory/`）
+- `.agent-workflow/CAPABILITIES.md`
+- `docs/reference/claude/`（Claude 仅设计参考，不接入）
+- `docs/claude-plugin-mapping.md`（重定向 stub）
 
 **Interfaces:**
+
 - Consumes: Task 2 的核心流程和项目配置，Task 3 的任务与 Review 模板。
-- Produces: 不复制核心规则的宿主入口，以及 Claude 官方插件到通用能力的映射。
+- Produces: 当前宿主（Codex / Cursor / starFactory）薄入口；Claude 材料降为设计参考。
 
 - [x] **Step 1: 编写三个薄适配入口**
 
@@ -120,16 +130,18 @@
 ### Task 5: 使用说明与一致性验证
 
 **Files:**
+
 - Create: `README.md`
 - Verify: all files under the deliverable root
 
 **Interfaces:**
+
 - Consumes: Tasks 1-4 的所有产物。
 - Produces: 可复制、可初始化、可执行的用户入口和最终质量报告。
 
 - [x] **Step 1: 编写 README**
 
-  提供五分钟接入步骤、任务启动方式、审批方式、AI 自主执行方式、L2 交付说明和后续升级入口。
+  提供接入（交给 AI）、日常使用、审批方式、AI 自主执行方式、L2 交付说明和后续升级入口。
 
 - [x] **Step 2: 执行结构检查**
 

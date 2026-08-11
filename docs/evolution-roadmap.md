@@ -15,7 +15,9 @@
 - AI 自主实现、验证、Review、修复和 L2 交付。
 - Fast、Standard、Governed 三条路径。
 - 项目配置、任务和 Review 模板。
-- Codex、Claude Code、Cursor 薄适配入口。
+- 跨 Agent 能力矩阵（`CAPABILITIES.md`）：统一能力名与降级路径。
+- Codex、Cursor、starFactory 薄适配入口（一律在 `adapters/`；开发仓库按宿主目录约定对齐路径）。
+- Claude Code 仅作为设计参考材料保留（`docs/reference/claude/`），不接入、不列为当前宿主。
 
 ### 明确不做
 
@@ -24,6 +26,7 @@
 - 不自动调度多个 Agent。
 - 不自动 Push、创建 PR、合并或部署。
 - 不要求安装任何插件。
+- 不把任一宿主的插件名写进核心流程，也不要求其他宿主模拟这些插件。
 
 ### 退出条件
 
@@ -41,10 +44,10 @@
 
 ### 建设内容
 
-- 将核心能力映射到 Codex、Claude Code、Cursor 的现有能力。
-- Claude Code 优先验证 `feature-dev`、`code-review`、`pr-review-toolkit`、`commit-commands` 和 `claude-md-management`。
-- 按项目启用 TypeScript、Python、Go 等 LSP。
-- 固化独立 Reviewer 的优先级和不可用时的降级路径。
+- 在真实任务中验证 `CAPABILITIES.md` 中 **Codex / Cursor / starFactory** 列（薄入口已在 V1 提供）。
+- 不把 Claude 插件验证列入当前宿主退出条件；Claude 材料保持参考即可。
+- 按项目需要启用宿主自带的 LSP / 子代理等增强；可选按 `docs/community-capability-alignment.md` 验证社区 Skill / MCP。
+- 固化独立 Reviewer 的优先级和不可用时的降级路径；确认「换宿主不换能力名」。
 
 ### 进入条件
 
@@ -54,9 +57,9 @@
 
 ### 退出条件
 
-- 同一个任务包可以由两个不同 Agent 读取和继续执行。
-- Claude 插件缺失时仍可按核心流程完成任务。
-- 宿主适配文件没有复制和分叉核心规则。
+- 同一个任务包可以由 Codex、Cursor、starFactory 中的两个不同 Agent 读取和继续执行。
+- 能力缺口时仍可按能力矩阵降级列完成任务，且不依赖 Claude 插件。
+- 宿主适配文件没有复制和分叉核心规则；Claude 细节仅存在于 `docs/reference/claude/`。
 
 ## 4. V2：Skill 与质量自动化
 
@@ -67,8 +70,9 @@
 - 引入最多 3 轮的自动修复循环。
 - Governed Path 接入安全和迁移专项检查。
 - 将高频、稳定、可机械判断的规则升级为少量 Hook。
+- 按痛点从 `docs/community-capability-alignment.md` 晋升社区 Skill / MCP 为默认增强（仍可降级）。
 
-### Claude Code 可选能力
+### Claude Code 参考能力（非当前宿主，不作为 V2 接入目标）
 
 - `ralph-loop`：受限修复循环。
 - `security-guidance`：实现期实时安全提示。
@@ -119,22 +123,21 @@
 1. **人工控制面**：目标、设计、授权、风险与发布决策。
 2. **AI 执行面**：探索、实现、验证、Review、修复与交付。
 3. **质量治理面**：DoD、独立 Reviewer、安全门禁和证据校验。
-4. **宿主适配面**：Codex、Claude Code、Cursor 和未来 Agent 的能力映射。
+4. **宿主适配面**：Codex、Cursor、starFactory 和未来 Agent 的能力映射（Claude Code 仅设计参考）。
 5. **学习进化面**：失败数据、规则晋升、Skill 评估和流程版本管理。
 
 最终态不是让 AI 获得无限权限，而是让 AI 在明确授权边界内最大化自主性：人工只处理方向、风险和例外，AI 对执行闭环和完成证据负责。
 
 ## 7. 迭代决策表
 
-| 观察到的问题 | 优先升级方式 |
-|---|---|
-| Agent 经常漏读流程 | 加强宿主薄适配入口 |
-| 经常漏填同一任务字段 | 改进任务模板或增加 Skill |
-| 经常无证据宣称完成 | 增加 verifier 门禁，稳定后升级 Hook |
-| Review 漏报 | 增加专项 Review Profile 或独立 Reviewer |
-| Review 噪声过多 | 增加证据要求、置信度和聚合去重 |
-| 修复反复失败 | 限制循环次数并改进根因报告 |
-| 跨会话任务丢失 | 引入轻量状态持久化 |
-| 多 Agent 文件冲突 | 引入任务拆分和文件范围协调 |
-| 跨项目安装成本高 | 打包 Plugin 并做版本管理 |
-
+| 观察到的问题         | 优先升级方式                            |
+| -------------------- | --------------------------------------- |
+| Agent 经常漏读流程   | 加强宿主薄适配入口                      |
+| 经常漏填同一任务字段 | 改进任务模板或增加 Skill                |
+| 经常无证据宣称完成   | 增加 verifier 门禁，稳定后升级 Hook     |
+| Review 漏报          | 增加专项 Review Profile 或独立 Reviewer |
+| Review 噪声过多      | 增加证据要求、置信度和聚合去重          |
+| 修复反复失败         | 限制循环次数并改进根因报告              |
+| 跨会话任务丢失       | 引入轻量状态持久化                      |
+| 多 Agent 文件冲突    | 引入任务拆分和文件范围协调              |
+| 跨项目安装成本高     | 打包 Plugin 并做版本管理                |

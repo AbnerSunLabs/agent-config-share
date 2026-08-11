@@ -1,0 +1,61 @@
+---
+description: 跨 Agent 个人研发工作流入口
+alwaysApply: true
+---
+
+# Cursor 工作流入口
+
+本规则只映射 Cursor 能力。核心流程以 `.agent-workflow/WORKFLOW.md` 为唯一事实源；跨宿主实现对照见 `.agent-workflow/CAPABILITIES.md`。
+
+> **本仓库源路径：** `adapters/cursor/rules/cursor-workflow.mdc`。  
+> **开发仓库对齐到：** `.cursor/rules/cursor-workflow.mdc`。  
+> `alwaysApply: true` 表示相关对话都会加载；若某项目仅希望按需启用，可改为手动 Rules 或去掉 alwaysApply。
+
+## 必读顺序
+
+1. `.agent-workflow/WORKFLOW.md`
+2. `.agent-workflow/PROJECT.md`
+3. 当前任务 `.agent-workflow/tasks/<task-id>.md`
+4. 项目声明的架构和测试文档
+5. 需要对照「本宿主怎么落地」时再读 `.agent-workflow/CAPABILITIES.md`
+
+## 默认行为
+
+收到非琐碎开发任务时，**默认**按 `WORKFLOW.md` 执行：探索 → 写/更新任务文件 → `awaiting_approval` → 停止改业务源码。用户只需描述任务；批准时说「批准，L2」（或指定级别）即可，无需粘贴长启动话术。
+
+## 冲突优先级
+
+1. 宿主安全审批与环境强制限制
+2. 已批准的执行授权包、人工门禁与 Definition of Done
+3. 用户即时口头指令若改变目标/范围/验收，必须回到 `drafting` 重新审批
+4. `PROJECT.md` 与任务设计
+5. 本规则文件
+
+不得用本规则或口头「跳过流程」覆盖审批门禁与 DoD。本工作流不使用 Claude Code；不要寻找或模拟其插件。
+
+## Cursor 能力映射
+
+对照 `CAPABILITIES.md` 中的 Cursor 列：
+
+- `explore` / `plan` / `design`：先探索真实项目，再填写任务规划与设计；可用 Plan 模式。
+- 人工门禁：规划设计完成后等待批准；未批准时不修改业务源码（允许维护 `.agent-workflow/tasks/*` 与新建 `PROJECT.md`）。
+- `implement`：批准后自主实现。
+- `verify`：使用项目真实命令生成验证证据。
+- `review`：优先独立 Reviewer Agent / 新会话；否则按 `REVIEW_TEMPLATE.md` 串行；缺陷优先。
+- `fix`：P0/P1 修复并复验；最多 3 轮，超限 `blocked`。
+- `deliver`：默认 L2；未经 L3 授权禁止 Push 或创建 PR。
+- `learn`：写入任务经验沉淀，稳定后晋升 Rules 或项目文档。
+
+## 执行规则
+
+- 批准后自主完成实现、验证、Review、修复、复验和交付；普通技术选择不阻塞用户。
+- 用户追加要求时区分「范围内补充」与「基线变化」；基线变化回审批。
+- 进入 `blocked` 时提交：精确阻断、已尝试、关键证据、2–3 个互斥选项及推荐。
+- 不复制或重写核心流程；需要改规则时改 `.agent-workflow/WORKFLOW.md`。
+
+## 降级
+
+- 无 Agent 或自动化能力时串行执行同一流程。
+- 无 Git 仓库时 L2 降级为 L1。
+- 无法执行检查时记录精确原因和影响，不得伪造通过结果。
+- 能力缺口一律走 `CAPABILITIES.md` 降级列，不把其他宿主的插件当作依赖。

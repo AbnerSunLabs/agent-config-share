@@ -8,14 +8,15 @@
 
 这套工作流面向个人开发者，采用“人工决策、AI 自主执行、证据驱动交付”的协作模式。人工参与需求、规划和设计确认；确认后，AI 在授权范围内自主完成代码实现、验证、独立 Review、问题修复、重新验证和 L2 交付。
 
-V1 使用 Agent 无关的 Markdown 契约作为唯一事实源，通过薄适配文件接入 Codex、Claude Code、Cursor 等宿主。宿主专属 Skill、Agent、Hook、Plugin 只负责实现能力，不定义核心流程。
+V1 使用 Agent 无关的 Markdown 契约作为唯一事实源，通过薄适配文件接入 **Codex、Cursor、starFactory**。  
+**不使用 Claude Code**；其官方插件体系仅作为设计参考（能力分层：Skill / Agent / Hook / LSP / Plugin），材料见 `docs/reference/claude/`。宿主专属 Skill、Agent、Hook、Plugin 只负责实现能力，不定义核心流程。
 
 ## 2. 设计来源与取舍
 
 设计吸收两类参考：
 
 - 个人研发工作流设计中的 Fast、Standard、Governed 路径，分层 Review、风险分级、修复回退和证据交付。
-- Claude Code 官方插件体系中的能力分层：Skill 表达知识与流程，Agent 提供独立角色，Hook 强制 Guardrail，LSP 提供代码语义，Plugin 负责打包分发。
+- Claude Code 官方插件体系中的能力分层（**仅作设计参考，非运行时依赖**）：Skill 表达知识与流程，Agent 提供独立角色，Hook 强制 Guardrail，LSP 提供代码语义，Plugin 负责打包分发。
 
 V1 不直接实现参考设计中的 SQLite 状态引擎、崩溃恢复、多 Agent 文件所有权、Review 聚合器和全生命周期 Hooks。这些能力只有在真实任务暴露出稳定瓶颈后才进入后续版本。
 
@@ -31,12 +32,12 @@ V1 不直接实现参考设计中的 SQLite 状态引擎、崩溃恢复、多 Ag
 
 ## 4. 人机职责边界
 
-| 角色 | 负责 | 不负责 |
-|---|---|---|
-| 人工 | 目标、范围、设计确认、授权等级、重大风险和发布决策 | 普通代码细节、常规测试失败、一般 Review 修复 |
-| AI 实现者 | 探索、实现、测试、修复、文档和原子 Commit | 未授权扩展范围、不可逆外部操作 |
-| AI Reviewer | 独立检查正确性、回归、测试、安全和可维护性 | 直接修改代码或自行降低验收标准 |
-| AI Verifier | 运行并记录真实验证，核对验收条件 | 用推测或代码阅读代替可执行证据 |
+| 角色        | 负责                                               | 不负责                                       |
+| ----------- | -------------------------------------------------- | -------------------------------------------- |
+| 人工        | 目标、范围、设计确认、授权等级、重大风险和发布决策 | 普通代码细节、常规测试失败、一般 Review 修复 |
+| AI 实现者   | 探索、实现、测试、修复、文档和原子 Commit          | 未授权扩展范围、不可逆外部操作               |
+| AI Reviewer | 独立检查正确性、回归、测试、安全和可维护性         | 直接修改代码或自行降低验收标准               |
+| AI Verifier | 运行并记录真实验证，核对验收条件                   | 用推测或代码阅读代替可执行证据               |
 
 ## 5. 生命周期
 
@@ -179,66 +180,86 @@ Review 必须主动寻找缺陷，而不是总结改动。基础维度包括：
 
 ## 12. 交付级别
 
-| 级别 | 授权范围 |
-|---|---|
-| L1 | 修改本地代码并验证 |
-| L2 | L1 + 创建原子 Git Commit，默认级别 |
-| L3 | L2 + 推送功能分支并创建或更新 PR |
-| L4 | L3 + 合并或部署 |
+| 级别 | 授权范围                           |
+| ---- | ---------------------------------- |
+| L1   | 修改本地代码并验证                 |
+| L2   | L1 + 创建原子 Git Commit，默认级别 |
+| L3   | L2 + 推送功能分支并创建或更新 PR   |
+| L4   | L3 + 合并或部署                    |
 
 L3、L4 必须在执行授权包中明确授予。即使获得 L2 授权，AI 也不得自动 Push。
 
 ## 13. 跨 Agent 架构
 
-核心契约定义能力，不绑定实现：
+核心契约定义能力，不绑定实现。完整矩阵见 `.agent-workflow/CAPABILITIES.md`。
 
-| 通用能力 | 责任 |
-|---|---|
-| explorer | 只读探索和定位真实项目状态 |
-| planner | 输出目标、范围、验收条件和实施计划 |
-| designer | 输出架构、接口、数据、失败模式和测试策略 |
-| implementer | 在授权范围内完成修改 |
-| verifier | 执行并记录真实验证 |
-| reviewer | 独立、只读、缺陷优先的审查 |
-| delivery | 按授权等级提交交付物 |
-| learner | 将复盘结果记录并按门槛提升为长期规则 |
+| 通用能力  | 责任                                                          |
+| --------- | ------------------------------------------------------------- |
+| explore   | 只读探索和定位真实项目状态                                    |
+| plan      | 输出目标、范围、验收条件和实施计划                            |
+| design    | 输出架构、接口、数据、失败模式和测试策略                      |
+| implement | 在授权范围内完成修改                                          |
+| verify    | 执行并记录真实验证                                            |
+| review    | 独立、只读、缺陷优先的审查                                    |
+| fix       | 修复阻断问题并触发复验（逻辑角色，可与 implement 同一执行者） |
+| deliver   | 按授权等级提交交付物                                          |
+| learn     | 将复盘结果记录并按门槛提升为长期规则                          |
 
-Codex、Claude Code、Cursor 只负责把自身的 Mode、Skill、Agent、Command、Hook 和工具映射到上述能力。
+Codex、Cursor、starFactory 只负责把自身的 Mode、Skill、Agent、Command、Hook 和工具映射到上述能力。宿主适配源一律在 `adapters/<host>/`；在要用某个 Agent 开发的仓库里按该 Agent 目录约定对齐路径。Claude Code 不在当前使用列表中。
 
-## 14. Claude Code 插件边界
+## 14. 跨宿主能力统一与 Claude 参考边界
 
-Claude 官方插件可增强执行，但不可成为核心流程的前置依赖：
+跨 Agent 对齐的单位是**能力**（explore / plan / design / implement / verify / review / fix / deliver / learn），不是插件名。权威对照表：
 
-- `feature-dev` 映射 explorer、planner、designer、implementer。
-- `code-review` 映射 reviewer 编排。
-- `pr-review-toolkit` 提供 Review 维度。
-- `commit-commands` 映射 delivery。
-- `claude-md-management` 映射 learner。
-- `security-guidance` 和 `claude-security` 映射安全 Profile。
-- `ralph-loop` 映射受限的修复循环，必须遵守 3 轮终止条件。
-- `hookify` 只用于已经通过真实任务验证的稳定 Guardrail。
-- LSP 插件提供代码语义，不改变流程状态。
+`.agent-workflow/CAPABILITIES.md`
 
-详细映射见 `claude-plugin-mapping.md`。
+**当前使用宿主：** Codex、Cursor、starFactory。  
+**Claude Code：** 不使用；`docs/reference/claude/` 仅保留设计参考，不可成为核心流程前置依赖，也不可要求当前宿主安装或模拟。参考摘要（理解能力拆分即可，不必落地）：
+
+- `feature-dev` → explore、plan、design、implement（须插入人工门禁）
+- `code-review` + `pr-review-toolkit` → review
+- `commit-commands` → deliver（受 L1–L4 约束）
+- `claude-md-management` → learn
+- `security-guidance` / `claude-security` → Governed 或 security Profile 增强
+- `ralph-loop` → 受限 fix 循环（最多 3 轮）
+- `hookify` → 已验证的稳定 Guardrail
+- LSP → 代码语义，不改变流程状态
+
+当前宿主若用社区 Skill / MCP 对齐上述同等能力，见 `docs/community-capability-alignment.md`。
 
 ## 15. V1 产物
 
 ```text
 .agent-workflow/
 ├── WORKFLOW.md
+├── CAPABILITIES.md
 ├── PROJECT.template.md
 ├── TASK_TEMPLATE.md
 └── REVIEW_TEMPLATE.md
 
-adapters/
-├── AGENTS.md
-├── CLAUDE.md
-└── cursor-workflow.mdc
+adapters/                       # 宿主适配源（唯一存放处）
+├── README.md                   # 原则 + 路径对齐表
+├── codex/
+│   ├── README.md
+│   └── AGENTS.md               # 对齐到开发仓库 AGENTS.md
+├── cursor/
+│   ├── README.md
+│   └── rules/
+│       ├── cursor-workflow.mdc # 对齐到 .cursor/rules/
+│       └── adapters-layout.mdc # 本仓维护约定（不对齐业务项目）
+└── starFactory/
+    ├── README.md
+    └── AGENTS.md               # 对齐到 .starFactory/AGENTS.md
 
 docs/
 ├── personal-ai-development-workflow-v1-design.md
 ├── evolution-roadmap.md
-└── claude-plugin-mapping.md
+├── community-capability-alignment.md  # 社区 Skill/MCP 与能力对齐
+├── claude-plugin-mapping.md    # 重定向至 docs/reference/claude/
+└── reference/claude/           # 设计参考，不接入
+    ├── README.md
+    ├── CLAUDE.md
+    └── plugins.md
 ```
 
 V1 不提供运行时程序。任务状态由任务 Markdown 记录，项目命令由 `PROJECT.md` 声明，流程门禁由 Agent 执行并由最终证据验证。
@@ -263,4 +284,3 @@ V1 的成功不以自动化程度衡量，而以以下结果衡量：
 - Review 问题能进入修复和复验，而不是停留在报告。
 - 高风险操作不会因为“自动执行”而默认扩大权限。
 - 真实失败记录能够指导下一轮流程迭代。
-

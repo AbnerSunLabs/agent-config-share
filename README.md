@@ -2,7 +2,12 @@
 
 这是一套跨 Agent 的个人开发流程：人工负责规划与设计确认，确认后 AI 自主完成实现、验证、独立 Review、修复、复验和默认 L2 交付。
 
-V1 是纯 Markdown 契约，不要求安装运行时、数据库或插件。Codex、Claude Code、Cursor 通过薄适配文件执行同一套流程。
+V1 是纯 Markdown 契约，不要求安装运行时、数据库或插件。
+
+**当前使用的 AI Agent：Codex、Cursor、starFactory。**  
+**不使用 Claude Code。** Claude Code 及其插件体系仅作为工作流设计参考（能力分层、降级思路），见 `docs/reference/claude/`；不提供业务项目接入，也不要求安装任何 Claude 专属依赖。
+
+**统一的是能力，不是插件。** 各宿主如何落地同一职责，见 `.agent-workflow/CAPABILITIES.md`。Codex / Cursor / starFactory 的适配文件一律在 `adapters/`；在要用某个 Agent 开发的仓库里，按该 Agent 目录约定做路径对齐。
 
 ## 核心模型
 
@@ -21,81 +26,72 @@ AI 只有在范围变化、未授权高风险操作、外部权限缺失、严�
 ```text
 personal-ai-development-workflow/
 ├── README.md
-├── implementation-plan.md
+├── implementation-plan.md          # 本仓库建设记录，接入业务项目时可忽略
 ├── .agent-workflow/
-│   ├── WORKFLOW.md
+│   ├── WORKFLOW.md                 # 流程唯一事实源
+│   ├── CAPABILITIES.md             # 跨 Agent 能力矩阵（当前宿主）
 │   ├── PROJECT.template.md
 │   ├── TASK_TEMPLATE.md
 │   └── REVIEW_TEMPLATE.md
-├── adapters/
-│   ├── AGENTS.md
-│   ├── CLAUDE.md
-│   └── cursor-workflow.mdc
+├── adapters/                       # 宿主适配源（唯一存放处）
+│   ├── README.md                   # 原则 + 路径对齐表
+│   ├── codex/
+│   │   ├── README.md
+│   │   └── AGENTS.md               # 对齐到开发仓库 AGENTS.md
+│   ├── cursor/
+│   │   ├── README.md
+│   │   └── rules/
+│   │       ├── cursor-workflow.mdc # 对齐到 .cursor/rules/
+│   │       └── adapters-layout.mdc # 本仓维护约定（不对齐业务项目）
+│   └── starFactory/
+│       ├── README.md
+│       └── AGENTS.md               # 对齐到 .starFactory/AGENTS.md
 └── docs/
     ├── personal-ai-development-workflow-v1-design.md
     ├── evolution-roadmap.md
-    └── claude-plugin-mapping.md
+    ├── community-capability-alignment.md  # 社区 Skill/MCP 与能力对齐
+    ├── claude-plugin-mapping.md    # 重定向到 docs/reference/claude/
+    └── reference/claude/           # Claude Code 设计参考（不接入）
+        ├── README.md
+        ├── CLAUDE.md
+        └── plugins.md
 ```
 
-## 五分钟接入
+## 接入（交给 AI）
 
-### 1. 复制核心契约
-
-将整个 `.agent-workflow/` 目录复制到目标项目根目录。
-
-把：
+本仓库托管到 GitHub 后，在**业务项目**里对当前 Agent 说一句即可（把 URL 换成实际地址，宿主三选一）：
 
 ```text
-.agent-workflow/PROJECT.template.md
+按 https://github.com/<org>/<repo> 把个人 AI 研发工作流接入本仓库（宿主：Cursor）
+# 上行为占位：须替换为真实 GitHub URL；宿主改成 Codex / Cursor / starFactory
 ```
 
-复制为：
+宿主可写：`Codex` / `Cursor` / `starFactory`。
 
-```text
-.agent-workflow/PROJECT.md
-```
+AI 必须按下列步骤自动完成前置工作（人工只审结果，不手搓复制）：
 
-根据项目真实代码、配置和命令填写，不确定的内容标记为“未验证”。
+1. **获取源**：从上述 GitHub 仓库取得材料（推荐：浅克隆或 sparse checkout 后只取 `.agent-workflow/` 与对应 `adapters/<host>/` 入口文件）。不要拷贝本工作流仓的 `docs/`、`implementation-plan.md`，也不要把 Claude 参考材料当成接入依赖。
+2. **同步核心契约**：将远端 `.agent-workflow/` 放到本项目根。若本地已有该目录：更新契约与模板文件，**保留**已填写的 `PROJECT.md` 与 `tasks/`（缺模板字段再补，勿覆盖用户任务内容）。
+3. **对齐当前宿主入口**（源在远端 `adapters/`；已有文件则合并「必读顺序 / 默认行为 / 冲突优先级」，勿整文件覆盖）：
+   - Codex → `adapters/codex/AGENTS.md` → 项目根 `AGENTS.md`
+   - Cursor → `adapters/cursor/rules/cursor-workflow.mdc` → `.cursor/rules/cursor-workflow.mdc`
+   - starFactory → `adapters/starFactory/AGENTS.md` → `.starFactory/AGENTS.md`
+4. **项目画像**：若不存在 `.agent-workflow/PROJECT.md`，从 `PROJECT.template.md` 创建；探索真实仓库后填写命令、结构与约束，不确定处标「未验证」。已有 `PROJECT.md` 则只补缺、不擅自改已验证项。
+5. **任务目录**：确保存在 `.agent-workflow/tasks/`。
+6. **汇报**：列出已对齐路径、`PROJECT.md` 中待确认项；到此停住，等待用户确认画像或直接下任务。
 
-### 2. 复制对应 Agent 入口
+路径对齐细则见 `adapters/README.md`。
 
-- Codex：将 `adapters/AGENTS.md` 复制到项目根目录。
-- Claude Code：将 `adapters/CLAUDE.md` 复制到项目根目录。
-- Cursor：将 `adapters/cursor-workflow.mdc` 复制到项目的规则目录。
+## 日常使用
 
-如果项目已经存在对应文件，不要覆盖；将“必读顺序”和“核心契约优先”部分合并进去。
+入口文件对齐后，**不必再粘贴长启动话术**。非琐碎开发任务默认走 `.agent-workflow/WORKFLOW.md`：
 
-### 3. 创建任务文件
+1. 你直接说任务（例如「做 XXX」）。
+2. AI 探索 → 写/更新 `.agent-workflow/tasks/<task-id>.md` → 进入 `awaiting_approval` → **停止改业务源码**。
+3. 你确认授权包后回复：`批准，L2`（或指定 L1–L4）。
+4. AI 自主实现、验证、Review、修复、复验与按级别交付；仅命中 `WORKFLOW.md` 人工介入条件时再暂停。
 
-创建目录：
-
-```text
-.agent-workflow/tasks/
-```
-
-复制 `TASK_TEMPLATE.md` 为：
-
-```text
-.agent-workflow/tasks/<task-id>.md
-```
-
-### 4. 启动规划设计
-
-向 Agent 提交：
-
-```text
-请按照 .agent-workflow/WORKFLOW.md 执行这个任务。
-先探索真实项目并完成规划和设计，将结果写入当前任务文件。
-到 awaiting_approval 后暂停，等待我确认，不要提前修改业务源码。
-```
-
-### 5. 授权执行
-
-确认任务文件中的目标、非目标、验收条件、方案、风险、验证计划和交付级别后，回复：
-
-```text
-批准当前执行授权包，交付级别 L2。后续实现、验证、Review、修复和复验由 AI 自主推进；只有命中 WORKFLOW.md 的人工介入条件时再暂停。
-```
+琐碎改动（单行笔误、纯格式等）可不建任务文件；有疑问时按更高风险路径处理。
 
 ## 默认 L2 的含义
 
@@ -119,45 +115,36 @@ L2 不允许 AI：
 
 ## 三条路径
 
-| 路径 | 适用场景 | 特点 |
-|---|---|---|
-| Fast | 局部、低风险、可快速回滚 | 简化规划设计，但仍需人工确认、验证和 Review |
-| Standard | 普通功能、Bug、行为变化、重构 | 默认完整流程 |
-| Governed | 安全、数据、迁移、基础设施、公共契约 | 增加专项 Review、回滚和逐项授权 |
+| 路径     | 适用场景                             | 特点                                        |
+| -------- | ------------------------------------ | ------------------------------------------- |
+| Fast     | 局部、低风险、可快速回滚             | 简化规划设计，但仍需人工确认、验证和 Review |
+| Standard | 普通功能、Bug、行为变化、重构        | 默认完整流程                                |
+| Governed | 安全、数据、迁移、基础设施、公共契约 | 增加专项 Review、回滚和逐项授权             |
 
-## Claude Code 专属插件适配（可选）
+## 跨 Agent 能力如何统一
 
-本节列出的插件只能在 Claude Code 中直接安装和调用，不能直接用于 Codex、Cursor 或其他 Agent。
+不要按插件名对齐，按能力对齐。权威对照表：
 
-跨 Agent 复用的是 `.agent-workflow/WORKFLOW.md` 定义的能力契约、任务模板和 Review 模板。不同 Agent 使用各自的原生能力实现同一职责：
+`.agent-workflow/CAPABILITIES.md`
 
-| 通用能力 | Claude Code 实现 | 其他 Agent 的实现方式 |
-|---|---|---|
-| 规划与实现 | `feature-dev` | 原生 Plan、执行模式或通用 Skill |
-| 独立 Review | `code-review` | Reviewer Agent、新会话或 Review 模板 |
-| Review 维度 | `pr-review-toolkit` | `.agent-workflow/REVIEW_TEMPLATE.md` |
-| Git 交付 | `commit-commands` | 标准 Git CLI |
-| 长期上下文 | `claude-md-management` | `AGENTS.md`、Rules 或项目文档 |
-| 安全护栏 | `hookify` | 宿主 Hook、权限系统或人工审批 |
-| 代码语义 | Claude LSP 插件 | 宿主 LSP、编译器和类型检查 |
+| 能力（示例）      | 各宿主共同点                 | 差异放哪里（当前宿主）                             |
+| ----------------- | ---------------------------- | -------------------------------------------------- |
+| `plan` / `design` | 写出执行授权包并停在审批门禁 | Codex Plan、Cursor Plan 模式、starFactory 任务模板 |
+| `review`          | 独立只读 + 统一 Finding      | 子代理 / 新会话 / `REVIEW_TEMPLATE` 串行           |
+| `deliver`         | 遵守 L1–L4                   | Git CLI                                            |
 
-V1 不要求安装任何插件。只有使用 Claude Code 并进入 V1.1 后，才建议按以下顺序验证：
+V1 不要求安装任何插件。能力缺口一律走矩阵「降级」列，且不能绕过人工确认或降低 DoD。
 
-```text
-feature-dev
-→ code-review + pr-review-toolkit
-→ commit-commands
-→ claude-md-management
-→ 语言 LSP
-```
+可选增强：用社区 Skill / MCP 对齐 Claude 参考插件的同职责能力（例如 `feature-dev` → superpowers 规划套件，`code-review` → 社区 Review Skill）。完整对照与安装命令见 `docs/community-capability-alignment.md`。
 
-后续再按真实痛点引入 `security-guidance`、`claude-security`、`ralph-loop` 和 `hookify`。详细规则见 `docs/claude-plugin-mapping.md`。
+版本边界：
 
-Claude 插件只能增强 Claude Code 的执行能力，不能成为核心流程依赖，也不能绕过人工确认门禁、改变默认权限或降低 Definition of Done。插件不可用时，必须按照跨 Agent 核心契约继续或降级执行。
+- **V1**：契约 + 能力矩阵 + 当前宿主（Codex / Cursor / starFactory）薄入口
+- **V1.1**：在真实任务中验证上述宿主列的增强工具；Claude 参考材料不进入接入路径；社区 Skill/MCP 按痛点可选
 
 ## 完成标准
 
-Agent 不能仅凭“代码已写完”宣布完成。最终必须交付：
+Agent 不能仅凭「代码已写完」宣布完成。最终必须交付：
 
 - 实现结果。
 - 修改清单。
@@ -167,18 +154,20 @@ Agent 不能仅凭“代码已写完”宣布完成。最终必须交付：
 - 未执行检查和遗留风险。
 - Git Commit 与交付状态。
 
-没有验证证据时，状态只能是“实现完成但尚未验证”，不能是 `done`。
+没有验证证据时，状态只能是「实现完成但尚未验证」，不能是 `done`。
 
 ## 跨 Agent 接力
 
-切换 Agent 时，只需要让新 Agent 读取：
+在 Codex、Cursor、starFactory 之间切换时，让新 Agent 读取：
 
 1. `.agent-workflow/WORKFLOW.md`
 2. `.agent-workflow/PROJECT.md`
 3. 当前任务文件
 4. 当前 Git 状态和 diff
 
-新 Agent 应从任务文件记录的状态继续，不重复已有可靠证据，也不把历史推测当作已验证事实。
+可选：`.agent-workflow/CAPABILITIES.md`（了解新宿主用什么工具继续）。
+
+新 Agent 应从任务文件记录的状态继续，不重复已有可靠证据，也不把历史推测当作已验证事实。不要引入 Claude 专属插件或入口来「补齐」能力。
 
 ## 迭代方式
 
@@ -195,5 +184,7 @@ V1 没有：
 - 自动 Hook 和危险操作拦截器。
 - Review 聚合器。
 - 自动 Push、PR、合并或部署。
+- 跨宿主统一的插件运行时。
+- Claude Code 作为运行时宿主（仅设计参考）。
 
-这些是后续能力，不影响 V1 通过任务文件完成跨 Agent 接力和证据交付。
+这些是后续能力，不影响 V1 通过任务文件与能力矩阵完成跨 Agent 接力和证据交付。
