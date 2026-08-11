@@ -1,0 +1,41 @@
+.agent-workflow/PROJECT.template.md
+  s_760f31e2a60756::t_19338c08424055 1-127
+.agent-workflow/REVIEW_TEMPLATE.md
+  s_760f31e2a60756::t_0c960104de6f03 1-161
+.agent-workflow/TASK_TEMPLATE.md
+  s_760f31e2a60756::t_19ef09515318f4 1-207
+.agent-workflow/WORKFLOW.md
+  s_760f31e2a60756::t_f5310be1e613ae 1-227
+README.md
+  s_760f31e2a60756::t_76fa71585fb0a6 1-199
+adapters/AGENTS.md
+  s_760f31e2a60756::t_b8b734d647e5cd 1-40
+adapters/CLAUDE.md
+  s_760f31e2a60756::t_98f838ee170e12 1-43
+adapters/cursor-workflow.mdc
+  s_760f31e2a60756::t_3e97c9e1022ee2 1-33
+docs/claude-plugin-mapping.md
+  s_760f31e2a60756::t_44689dd0ea256f 1-160
+docs/evolution-roadmap.md
+  s_760f31e2a60756::t_57cbfa75a1b568 1-140
+docs/personal-ai-development-workflow-v1-design.md
+  s_760f31e2a60756::t_53d6bbf7b1fcf9 1-266
+implementation-plan.md
+  s_760f31e2a60756::t_082a8eed8276a5 1-148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "37ed272bb375344bc8becc0a7e104c722c018cb5",
+  "prompts": {},
+  "sessions": {
+    "s_760f31e2a60756": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019feef2-12f6-7dc1-ae29-ab0628b1262c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
