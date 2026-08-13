@@ -26,7 +26,7 @@ def test_apply_requires_prune_flag_combo(tmp_path, monkeypatch):
     assert main(["sync", "--prune"]) == 2
 
 
-def test_schema_error_exits_2(tmp_path, monkeypatch):
+def test_schema_error_exits_2(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
@@ -34,6 +34,34 @@ def test_schema_error_exits_2(tmp_path, monkeypatch):
     (inv / "hooks.yaml").write_text("hooks: []\n")
     monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
     assert main(["sync"]) == 2
+    err = capsys.readouterr().err
+    assert "清单无效" in err
+
+
+def test_check_prints_ok_when_clean(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    inv = tmp_path / "inv"
+    inv.mkdir()
+    (inv / "mcp.yaml").write_text("mcp: []\n")
+    (inv / "hooks.yaml").write_text("hooks: []\n")
+    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    assert main(["sync", "--only", "mcp"]) == 0
+    assert "OK" in capsys.readouterr().out
+
+
+def test_check_prints_unreadable_file(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    inv = tmp_path / "inv"
+    inv.mkdir()
+    (inv / "mcp.yaml").write_text("mcp: []\n")
+    (inv / "hooks.yaml").write_text("hooks: []\n")
+    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    (tmp_path / ".cursor").mkdir()
+    (tmp_path / ".cursor" / "mcp.json").write_text("{")
+    assert main(["sync", "--only", "mcp"]) == 2
+    err = capsys.readouterr().err
+    assert "文件无法解析" in err
+    assert "mcp.json" in err
 
 
 def test_gaps_exit_1(tmp_path, monkeypatch):

@@ -49,7 +49,8 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         mcp_entries, hook_entries = sync.load_inventory()
-    except SchemaError:
+    except SchemaError as exc:
+        print(f"清单无效: {exc}", file=sys.stderr)
         return 2
 
     only: str | None = args.only

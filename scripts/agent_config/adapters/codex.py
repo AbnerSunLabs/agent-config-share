@@ -182,11 +182,11 @@ def check_mcp(entries: list[McpEntry]) -> CheckResult:
     if not path.exists():
         if not wanted:
             return CheckResult(gaps=[], drift=[], file_error=False)
-        return CheckResult(gaps=[], drift=[], file_error=True)
+        return CheckResult.fail(path)
 
     data, file_error = _load_data()
     if file_error:
-        return CheckResult(gaps=[], drift=[], file_error=True)
+        return CheckResult.fail(path)
 
     wanted = _host_entries(entries)
     wanted_ids = {e.id for e in wanted}
@@ -411,9 +411,9 @@ def _get_managed_hooks(data: dict[str, Any]) -> list[Any]:
 
 
 def check_hooks(entries: list[HookEntry]) -> CheckResult:
-    _, kind, target_error = resolve_hooks_target()
+    path, kind, target_error = resolve_hooks_target()
     if target_error:
-        return CheckResult(gaps=[], drift=[], file_error=True)
+        return CheckResult.fail(path)
     wanted = _host_hook_entries(entries)
     wanted_ids = {e.id for e in wanted}
     gaps: list[str] = []
@@ -422,7 +422,7 @@ def check_hooks(entries: list[HookEntry]) -> CheckResult:
     if kind == "hooks_json":
         data, file_error = _load_hooks_json()
         if file_error:
-            return CheckResult(gaps=[], drift=[], file_error=True)
+            return CheckResult.fail(path)
         hooks: list[Any] = data.get("hooks", []) if data is not None else []
         if data is None and wanted:
             return CheckResult(gaps=[e.id for e in wanted], drift=[], file_error=False)
@@ -453,7 +453,7 @@ def check_hooks(entries: list[HookEntry]) -> CheckResult:
 
     data, file_error = _load_data()
     if file_error:
-        return CheckResult(gaps=[], drift=[], file_error=True)
+        return CheckResult.fail(path)
     if data is None:
         if wanted:
             return CheckResult(gaps=[e.id for e in wanted], drift=[], file_error=False)

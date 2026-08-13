@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +22,16 @@ class CheckResult:
     gaps: list[str]
     drift: list[str]
     file_error: bool
+    file_errors: list[str] = field(default_factory=list)
+
+    @staticmethod
+    def fail(path: Path | str) -> "CheckResult":
+        return CheckResult(
+            gaps=[],
+            drift=[],
+            file_error=True,
+            file_errors=[str(path)],
+        )
 
 
 @dataclass

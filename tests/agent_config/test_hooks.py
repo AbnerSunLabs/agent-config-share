@@ -51,3 +51,42 @@ def test_sync_check_hooks_aggregates_codex(tmp_path, monkeypatch):
     result = sync.check_hooks(entries)
     assert "h" in result.gaps
 
+
+def test_cursor_hooks_jsonc_comments_are_ok(tmp_path, monkeypatch):
+    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    (tmp_path / ".cursor").mkdir()
+    (tmp_path / ".cursor" / "hooks.json").write_text(
+        '{\n  "version": 1,\n  "hooks": {\n    // "beforeShellExecution": []\n  }\n}\n'
+    )
+    result = cursor.check_hooks([])
+    assert result.file_error is False
+    assert result.gaps == []
+
+
+def test_starfactory_event_map_hooks_are_ok(tmp_path, monkeypatch):
+    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    from agent_config.adapters import starfactory
+
+    settings = tmp_path / ".starFactory" / "settings.json"
+    settings.parent.mkdir()
+    settings.write_text(json.dumps({
+        "model": "x",
+        "hooks": {"PostToolUse": [{"matcher": "claude", "command": "echo"}]},
+    }))
+    result = starfactory.check_hooks([])
+    assert result.file_error is False
+
+    entries = parse_hooks({"hooks": [{
+        "id": "git-ai",
+        "hosts": ["starFactory"],
+        "intent": "checkpoint",
+        "adapters": {"starFactory": {"event": "SessionEnd", "command": "git-ai"}},
+    }]})
+    starfactory.apply_hooks(entries, prune=False)
+    data = json.loads(settings.read_text())
+    assert data["model"] == "x"
+    assert data["hooks"]["PostToolUse"][0]["command"] == "echo"
+    managed = data["hooks"]["SessionEnd"]
+    assert managed[0]["agentConfigId"] == "git-ai"
+    assert "event" not in managed[0]
+

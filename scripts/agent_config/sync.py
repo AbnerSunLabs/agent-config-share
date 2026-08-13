@@ -16,13 +16,17 @@ from agent_config.schema import parse_hooks, parse_mcp
 def _merge_check_results(results: list[CheckResult]) -> CheckResult:
     gaps: list[str] = []
     drift: list[str] = []
+    file_errors: list[str] = []
     file_error = False
     for result in results:
         gaps.extend(result.gaps)
         drift.extend(result.drift)
+        file_errors.extend(result.file_errors)
         if result.file_error:
             file_error = True
-    return CheckResult(gaps=gaps, drift=drift, file_error=file_error)
+    return CheckResult(
+        gaps=gaps, drift=drift, file_error=file_error, file_errors=file_errors
+    )
 
 
 def check_mcp(entries: list[McpEntry]) -> CheckResult:
@@ -159,8 +163,14 @@ def exit_code(result: CheckResult) -> int:
 
 
 def print_result(result: CheckResult) -> None:
-    """打印缺口与漂移（漂移仅警告，不影响退出码）。"""
+    """打印缺口、漂移与无法解析的文件。"""
+    import sys
+
+    for path in result.file_errors:
+        safe_print(f"文件无法解析: {path}", file=sys.stderr)
     for gap in result.gaps:
         safe_print(f"缺口: {gap}")
     for item in result.drift:
         safe_print(f"漂移: {item}")
+    if not result.file_error and not result.gaps and not result.drift:
+        safe_print("OK")
