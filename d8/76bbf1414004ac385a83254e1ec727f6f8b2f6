@@ -1,0 +1,34 @@
+inventory/hooks.yaml
+  h_14565e8b179df6 1,3,47-67
+tests/agent_config/test_notify.py
+  h_14565e8b179df6 1-89
+inventory/README.md
+  h_14565e8b179df6 28
+tests/agent_config/test_load_inventory.py
+  h_14565e8b179df6 25-26
+scripts/hooks/notify-approval.py
+  h_14565e8b179df6 1-173
+README.md
+  s_ae3c5afa1186df::t_9a17848ecce619 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d876bbf1414004ac385a83254e1ec727f6f8b2f6",
+  "prompts": {},
+  "humans": {
+    "h_14565e8b179df6": {
+      "author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  },
+  "sessions": {
+    "s_ae3c5afa1186df": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "90b95cb3-7985-460d-a55c-1d8b0613d981",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
