@@ -9,6 +9,7 @@ from typing import Any
 
 from agent_config.envmerge import merge_env_map, ref_for
 from agent_config.envmerge import _ref_name  # noqa: PLC2701 — 复用引用解析
+from agent_config import hookbag
 from agent_config.models import CheckResult, HookEntry, McpEntry
 from agent_config.paths import home
 
@@ -351,26 +352,30 @@ def _apply_hooks_to_data(data: dict[str, Any], entries: list[HookEntry], prune: 
     hooks_table = data.setdefault("hooks", {})
     if not isinstance(hooks_table, dict):
         return
-    managed = hooks_table.get("managed", [])
-    if not isinstance(managed, list):
-        managed = []
 
     wanted = _host_hook_entries(entries)
     wanted_ids = {e.id for e in wanted}
+    marker = "agent_config_id"
 
     for entry in wanted:
-        idx = _find_hook_index(managed, entry)
-        existing = managed[idx] if idx is not None and isinstance(managed[idx], dict) else None
-        new_hook = _upsert_hook(entry, existing)
-        if idx is not None:
-            managed[idx] = new_hook
+        loc = hookbag.find_hook(hooks_table, entry, HOST, marker_key=marker)
+        existing = hookbag.get_hook(hooks_table, loc) if loc is not None else None
+        new_hook = hookbag.upsert_body(entry, existing, HOST, True, marker_key=marker)
+        if loc is not None:
+            hookbag.put_hook(hooks_table, loc, new_hook)
         else:
-            managed.append(new_hook)
+            hookbag.append_hook(hooks_table, entry, HOST, new_hook)
 
     if prune:
-        managed = _prune_hooks_list(managed, wanted_ids, entries)
+        def _keep(h: dict[str, Any]) -> bool:
+            mid = h.get(marker)
+            if not mid:
+                return True
+            if mid not in wanted_ids:
+                return False
+            return HOST in next(e for e in entries if e.id == mid).hosts
 
-    hooks_table["managed"] = managed
+        hookbag.prune_hooks(hooks_table, _keep)
 
 
 def _load_hooks_json() -> tuple[dict[str, Any] | None, bool]:
@@ -459,28 +464,30 @@ def check_hooks(entries: list[HookEntry]) -> CheckResult:
             return CheckResult(gaps=[e.id for e in wanted], drift=[], file_error=False)
         return CheckResult(gaps=[], drift=[], file_error=False)
 
-    hooks = _get_managed_hooks(data)
+    hooks_table = data.get("hooks", {})
+    if not isinstance(hooks_table, dict):
+        hooks_table = {}
+    marker = "agent_config_id"
     for entry in wanted:
-        idx = _find_hook_index(hooks, entry)
-        if idx is None:
+        loc = hookbag.find_hook(hooks_table, entry, HOST, marker_key=marker)
+        if loc is None:
             gaps.append(entry.id)
             continue
-        actual = hooks[idx]
-        if not isinstance(actual, dict) or not _hook_matches(entry, actual):
+        bucket, _ = loc
+        actual = hookbag.get_hook(hooks_table, loc)
+        if not hookbag.hook_matches(entry, actual, HOST, bucket, marker_key=marker):
             gaps.append(entry.id)
 
-    for i, hook in enumerate(hooks):
-        if not isinstance(hook, dict):
+    for bucket, i, hook in hookbag.iter_hooks(hooks_table):
+        mid = hook.get(marker)
+        if not mid:
             continue
-        marker = hook.get("agent_config_id")
-        if not marker:
+        if mid not in wanted_ids:
+            drift.append(mid)
             continue
-        if marker not in wanted_ids:
-            drift.append(str(i))
-            continue
-        entry = next(e for e in entries if e.id == marker)
+        entry = next(e for e in entries if e.id == mid)
         if HOST not in entry.hosts:
-            drift.append(str(i))
+            drift.append(mid)
 
     return CheckResult(gaps=gaps, drift=drift, file_error=False)
 

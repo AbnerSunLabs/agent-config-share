@@ -6,13 +6,25 @@ from typing import Any
 
 from agent_config.models import HookEntry
 
+_DEFAULT_MARKER = "agentConfigId"
+
 
 def hooks_container_ok(hooks: Any) -> bool:
     if hooks is None or isinstance(hooks, list):
         return True
-    if not isinstance(hooks, dict):
-        return False
-    return all(isinstance(v, list) for v in hooks.values())
+    return isinstance(hooks, dict)
+
+
+def nested_command(hook: dict[str, Any]) -> str | None:
+    cmd = hook.get("command")
+    if isinstance(cmd, str):
+        return cmd
+    inner = hook.get("hooks")
+    if isinstance(inner, list):
+        for item in inner:
+            if isinstance(item, dict) and isinstance(item.get("command"), str):
+                return item["command"]
+    return None
 
 
 def iter_hooks(hooks: Any) -> list[tuple[str | None, int, dict[str, Any]]]:
@@ -33,18 +45,22 @@ def iter_hooks(hooks: Any) -> list[tuple[str | None, int, dict[str, Any]]]:
 
 
 def find_hook(
-    hooks: Any, entry: HookEntry, host: str
+    hooks: Any,
+    entry: HookEntry,
+    host: str,
+    marker_key: str = _DEFAULT_MARKER,
 ) -> tuple[str | None, int] | None:
     adapter = entry.adapters[host]
-    command = adapter.get("command")
+    command = adapter.get("command") or nested_command(adapter)
     event = adapter.get("event")
 
     for bucket, i, hook in iter_hooks(hooks):
-        if hook.get("agentConfigId") == entry.id:
+        if hook.get(marker_key) == entry.id:
             return bucket, i
 
     for bucket, i, hook in iter_hooks(hooks):
-        if command is not None and hook.get("command") != command:
+        hook_cmd = nested_command(hook)
+        if command is not None and hook_cmd != command:
             continue
         hook_event = hook.get("event", bucket)
         if event is not None and hook_event != event:
@@ -80,9 +96,7 @@ def append_hook(hooks: Any, entry: HookEntry, host: str, hook: dict[str, Any]) -
 def prune_hooks(hooks: Any, keep) -> None:
     """keep(hook) 为 True 则保留。"""
     if isinstance(hooks, list):
-        hooks[:] = [
-            h for h in hooks if not isinstance(h, dict) or keep(h)
-        ]
+        hooks[:] = [h for h in hooks if not isinstance(h, dict) or keep(h)]
         return
     if isinstance(hooks, dict):
         for event, lst in list(hooks.items()):
@@ -92,25 +106,40 @@ def prune_hooks(hooks: Any, keep) -> None:
 
 
 def upsert_body(
-    entry: HookEntry, existing: dict[str, Any] | None, host: str, map_mode: bool
+    entry: HookEntry,
+    existing: dict[str, Any] | None,
+    host: str,
+    map_mode: bool,
+    marker_key: str = _DEFAULT_MARKER,
 ) -> dict[str, Any]:
     base = dict(existing) if existing else {}
     adapter = dict(entry.adapters[host])
     if map_mode:
         adapter.pop("event", None)
     base.update(adapter)
-    base["agentConfigId"] = entry.id
+    base[marker_key] = entry.id
     return base
 
 
-def hook_matches(entry: HookEntry, actual: dict[str, Any], host: str, bucket: str | None) -> bool:
-    if actual.get("agentConfigId") != entry.id:
+def hook_matches(
+    entry: HookEntry,
+    actual: dict[str, Any],
+    host: str,
+    bucket: str | None,
+    marker_key: str = _DEFAULT_MARKER,
+) -> bool:
+    marker = actual.get(marker_key)
+    if marker is not None and marker != entry.id:
         return False
     adapter = entry.adapters[host]
     for key, val in adapter.items():
         if key == "event":
             actual_event = actual.get("event", bucket)
             if actual_event != val:
+                return False
+            continue
+        if key == "command":
+            if nested_command(actual) != val:
                 return False
             continue
         if actual.get(key) != val:

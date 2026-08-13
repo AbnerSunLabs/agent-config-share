@@ -2,6 +2,8 @@
 
 本目录是 Codex、Cursor、starFactory 三家用户级 MCP 与 Hooks 的**唯一意图来源**（`mcp.yaml`、`hooks.yaml`）。
 
+本期已按本机用户级并集填入公共条目。密钥只写环境变量名。
+
 ## 用法
 
 在仓库根目录执行：
@@ -18,6 +20,7 @@ python3 scripts/agent-config sync --only hooks
 
 ## 说明
 
-- 密钥与 Token **只写环境变量名**（如 `CONTEXT7_API_KEY`），禁止在 yaml 中写真实取值。
-- 本工具不提供 Web 配置面板；仅通过 CLI 对账与合并。
-- `--only` 时不会读取未选中域的宿主配置文件，避免无关损坏影响结果。
+- 密钥与 Token **只写环境变量名**（如 `GITHUB_TOKEN`），禁止在 yaml 中写真实取值。
+- `tech-debt` 仅 Cursor（本机 star-flow 路径）；`node_repl` 为 Codex.app 内置，不进公共清单。
+- Cursor 现有 `Figma` 与清单 `figma` 不同名，apply 会新增托管名 `figma`，旧名无标记不会被 prune。
+- 本工具不提供 Web 配置面板。

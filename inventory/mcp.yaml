@@ -1,1 +1,41 @@
-mcp: []
+# 用户级 MCP 公共全集（无密钥）。id 即各宿主上的服务器名。
+# Cursor 现用名 Figma；清单用 figma，apply 后会多一个托管名，旧名未带标记不会被 prune。
+
+mcp:
+  - id: figma
+    hosts: [cursor, codex, starFactory]
+    transport: http
+    url: https://mcp.figma.com/mcp
+
+  - id: playwright
+    hosts: [cursor, codex, starFactory]
+    transport: stdio
+    command: npx
+    args: ["-y", "@playwright/mcp@latest"]
+
+  - id: github
+    hosts: [cursor, codex, starFactory]
+    transport: http
+    url: https://api.githubcopilot.com/mcp/
+    headers_env:
+      Authorization: GITHUB_TOKEN
+
+  - id: supabase
+    hosts: [cursor, codex, starFactory]
+    transport: http
+    url: https://mcp.supabase.com/mcp?project_ref=ehbnjnracnilsrzwlzcx&read_only=true
+
+  - id: vercel
+    hosts: [cursor, codex, starFactory]
+    transport: http
+    url: https://mcp.vercel.com
+
+  - id: tech-debt
+    hosts: [cursor]
+    transport: stdio
+    command: node
+    args:
+      - /Users/abnersun/Downloads/code/star-flow/mcp/tech-debt/dist/index.js
+    env:
+      - ACCOUNT
+      - Authentication_Code

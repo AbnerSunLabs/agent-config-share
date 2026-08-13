@@ -1,1 +1,45 @@
-hooks: []
+# 用户级 Hooks 公共全集。Cursor 当前 hooks 均为注释，不写入。
+# git-ai 二进制按本机路径；Codex 用 checkpoint codex，starFactory 用 checkpoint claude。
+
+hooks:
+  - id: git-ai-pre-tool-use
+    hosts: [codex, starFactory]
+    intent: git-ai checkpoint before tool
+    adapters:
+      codex:
+        event: PreToolUse
+        hooks:
+          - type: command
+            command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint codex --hook-input stdin
+      starFactory:
+        event: PreToolUse
+        matcher: "*"
+        hooks:
+          - type: command
+            command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint claude --hook-input stdin
+
+  - id: git-ai-post-tool-use
+    hosts: [codex, starFactory]
+    intent: git-ai checkpoint after tool
+    adapters:
+      codex:
+        event: PostToolUse
+        hooks:
+          - type: command
+            command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint codex --hook-input stdin
+      starFactory:
+        event: PostToolUse
+        matcher: "*"
+        hooks:
+          - type: command
+            command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint claude --hook-input stdin
+
+  - id: git-ai-stop
+    hosts: [codex]
+    intent: git-ai checkpoint on stop
+    adapters:
+      codex:
+        event: Stop
+        hooks:
+          - type: command
+            command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint codex --hook-input stdin
