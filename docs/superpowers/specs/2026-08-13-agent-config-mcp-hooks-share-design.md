@@ -96,7 +96,7 @@ python3 scripts/agent-config sync --only hooks
 - **Codex** `~/.codex/config.toml`：只改 MCP 相关表，并写 `agent_config_id`。
 - **starFactory** `~/.starFactory.json`：只 merge 顶层（user scope）`mcpServers.<id>`，并写 `agentConfigId`。
 
-`hosts` 未包含的宿主：check 不报缺口，apply 不写入、不删除该宿主上同名服务器（即使名字碰巧相同）。
+`hosts` 未包含的宿主：check 不报缺口，默认 apply 不写入、不删除该宿主上同名服务器（即使名字碰巧相同）。该宿主上若已有带本工具标记的同 id 条目，仅 `--prune` 时删除。
 
 **`env` / 密钥取值（三家同一 merge 顺序，满足「不把密钥取值改掉」）：**
 
@@ -181,7 +181,7 @@ hooks:
 2. 否则若 `config.toml` 已有 `[hooks]` / hooks 相关键 → 目标为 toml 的 hooks 段。
 3. 否则 apply 时 **创建** `~/.codex/hooks.json`；check 将「清单需要 Codex hooks 且 1、2 都不成立」记为缺口。
 
-因此：`hooks.json` 不存在但 toml 已有 hooks 时，**不是** hooks.json 缺口，也 **不得** 再创建 hooks.json。上表「可创建骨架」仅适用于解析结果选中、且允许创建的那一类文件。
+因此：`hooks.json` 不存在但 toml 已有 hooks 时，**不是** hooks.json 缺口，也 **不得** 再创建 hooks.json。下表「可创建骨架」仅适用于解析结果选中、且允许创建的那一类文件。若 `hooks.json` 与 toml `[hooks]` 同时存在，本工具只读写前者，不迁移或合并后者。
 
 MCP 与 Hooks 若解析到同一路径（仅 `config.toml`），必须按文件串行读-改-写，禁止两域并行写同一文件。
 
