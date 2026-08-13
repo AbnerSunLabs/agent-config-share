@@ -1,0 +1,29 @@
+inventory/README.md
+  s_ae3c5afa1186df::t_424b4e0e9fc3ea 5-6,23-26
+inventory/hooks.yaml
+  s_ae3c5afa1186df::t_febc6374e48a6b 1-45
+inventory/mcp.yaml
+  s_ae3c5afa1186df::t_f740f5f1c2a1d1 1-41
+scripts/agent_config/adapters/codex.py
+  s_ae3c5afa1186df::t_4ee4e207f901a0 12,358,361-365,367,370-376,378,467-470,472-473,476-478,481-483,485-486,488,490
+scripts/agent_config/hookbag.py
+  s_ae3c5afa1186df::t_99a45dd033c7dc 9-10,15-27,48-51,54,58,62-63,99,109-113,120,124-132,141-144
+tests/agent_config/test_load_inventory.py
+  s_ae3c5afa1186df::t_28c203ea720ac9 3,6,11-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6fbb0f97912bb04d76961499e0ad4972f45033ed",
+  "prompts": {},
+  "sessions": {
+    "s_ae3c5afa1186df": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "90b95cb3-7985-460d-a55c-1d8b0613d981",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
