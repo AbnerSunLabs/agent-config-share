@@ -1,0 +1,23 @@
+scripts/agent_config/adapters/codex.py
+  s_5cdbcb24d400c0::t_e1cdd20d1b6f0f 256-257,262,268-271,273,407-409,482-484,522-524
+scripts/agent_config/sync.py
+  s_5cdbcb24d400c0::t_432056e2051556 9-20,30-34,39-40
+tests/agent_config/test_hooks.py
+  s_5cdbcb24d400c0::t_f16642246f6981 5,29-53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d31613c62b42ec98443bb16858e3f5812cf85fdb",
+  "prompts": {},
+  "sessions": {
+    "s_5cdbcb24d400c0": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e1e2ef50-2663-4805-ad10-2859edf36664",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
