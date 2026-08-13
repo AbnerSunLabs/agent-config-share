@@ -1,0 +1,31 @@
+inventory/README.md
+  s_3f7dfb77ed9d84::t_4095b0d9d4464c 1-23
+scripts/agent-config
+  s_3f7dfb77ed9d84::t_a2ae882bdf824e 7
+scripts/agent_config/adapters/codex.py
+  s_3f7dfb77ed9d84::t_d145827ed6ccff 180-186
+scripts/agent_config/adapters/starfactory.py
+  s_3f7dfb77ed9d84::t_f9ff05ad069ca8 130-136,281-287
+scripts/agent_config/cli.py
+  s_3f7dfb77ed9d84::t_b04323a93ab0d9 1-68
+scripts/agent_config/sync.py
+  s_3f7dfb77ed9d84::t_d3913ac79e9f14 5-8,10-13,29-33,38-39,66-166
+tests/agent_config/test_cli.py
+  s_3f7dfb77ed9d84::t_04fa248be06619 1-112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "77e185752458af87ad822bcb30e23ccf7a5a43ac",
+  "prompts": {},
+  "sessions": {
+    "s_3f7dfb77ed9d84": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49a890d4-2786-4801-8945-92a28c006c5e",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
