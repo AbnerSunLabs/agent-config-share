@@ -6,7 +6,7 @@ import argparse
 import sys
 
 from agent_config import sync
-from agent_config.schema import SchemaError
+from agent_config.schema import HOSTS, SchemaError
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -35,6 +35,14 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="仅处理 MCP 或 Hooks 域",
     )
+    sync_parser.add_argument(
+        "--host",
+        dest="hosts",
+        action="append",
+        choices=HOSTS,
+        metavar="HOST",
+        help="只同步到指定宿主（cursor / codex / starFactory），可重复。默认三家",
+    )
     return parser
 
 
@@ -54,13 +62,16 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     only: str | None = args.only
+    hosts: list[str] | None = args.hosts
 
     if args.apply:
-        paths = sync.collect_apply_paths(only)
+        paths = sync.collect_apply_paths(only, hosts=hosts)
         sync.backup_files(paths)
-        sync.apply(mcp_entries, hook_entries, only=only, prune=args.prune)
+        sync.apply(
+            mcp_entries, hook_entries, only=only, prune=args.prune, hosts=hosts
+        )
 
-    result = sync.check(mcp_entries, hook_entries, only=only)
+    result = sync.check(mcp_entries, hook_entries, only=only, hosts=hosts)
     sync.print_result(result)
     return sync.exit_code(result)
 

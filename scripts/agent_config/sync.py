@@ -10,7 +10,19 @@ from agent_config.adapters import codex, cursor, starfactory
 from agent_config.models import CheckResult, HookEntry, McpEntry, load_yaml
 from agent_config import paths
 from agent_config.redact import safe_print
-from agent_config.schema import parse_hooks, parse_mcp
+from agent_config.schema import HOSTS, parse_hooks, parse_mcp
+
+_ADAPTERS = {
+    "cursor": cursor,
+    "codex": codex,
+    "starFactory": starfactory,
+}
+
+
+def _selected_hosts(hosts: list[str] | None) -> list[str]:
+    if not hosts:
+        return list(HOSTS)
+    return list(hosts)
 
 
 def _merge_check_results(results: list[CheckResult]) -> CheckResult:
@@ -29,44 +41,50 @@ def _merge_check_results(results: list[CheckResult]) -> CheckResult:
     )
 
 
-def check_mcp(entries: list[McpEntry]) -> CheckResult:
-    return _merge_check_results([
-        cursor.check_mcp(entries),
-        codex.check_mcp(entries),
-        starfactory.check_mcp(entries),
-    ])
+def check_mcp(entries: list[McpEntry], hosts: list[str] | None = None) -> CheckResult:
+    results = []
+    for name in _selected_hosts(hosts):
+        results.append(_ADAPTERS[name].check_mcp(entries))
+    return _merge_check_results(results)
 
 
-def apply_mcp(entries: list[McpEntry], prune: bool = False) -> None:
-    cursor.apply_mcp(entries, prune=prune)
-    starfactory.apply_mcp(entries, prune=prune)
-    codex.apply_mcp(entries, prune=prune)
+def apply_mcp(
+    entries: list[McpEntry], prune: bool = False, hosts: list[str] | None = None
+) -> None:
+    for name in _selected_hosts(hosts):
+        _ADAPTERS[name].apply_mcp(entries, prune=prune)
 
 
-def check_hooks(entries: list[HookEntry]) -> CheckResult:
-    return _merge_check_results([
-        cursor.check_hooks(entries),
-        starfactory.check_hooks(entries),
-        codex.check_hooks(entries),
-    ])
+def check_hooks(entries: list[HookEntry], hosts: list[str] | None = None) -> CheckResult:
+    results = []
+    for name in _selected_hosts(hosts):
+        results.append(_ADAPTERS[name].check_hooks(entries))
+    return _merge_check_results(results)
 
 
-def apply_hooks(entries: list[HookEntry], prune: bool = False) -> None:
-    cursor.apply_hooks(entries, prune=prune)
-    starfactory.apply_hooks(entries, prune=prune)
-    codex.apply_hooks(entries, prune=prune)
+def apply_hooks(
+    entries: list[HookEntry], prune: bool = False, hosts: list[str] | None = None
+) -> None:
+    for name in _selected_hosts(hosts):
+        _ADAPTERS[name].apply_hooks(entries, prune=prune)
 
 
 def apply_all(
     mcp_entries: list[McpEntry],
     hook_entries: list[HookEntry],
     prune: bool = False,
+    hosts: list[str] | None = None,
 ) -> None:
-    cursor.apply_mcp(mcp_entries, prune=prune)
-    cursor.apply_hooks(hook_entries, prune=prune)
-    starfactory.apply_mcp(mcp_entries, prune=prune)
-    starfactory.apply_hooks(hook_entries, prune=prune)
-    codex.apply_all(mcp_entries, hook_entries, prune=prune)
+    selected = _selected_hosts(hosts)
+    if "cursor" in selected:
+        cursor.apply_mcp(mcp_entries, prune=prune)
+        cursor.apply_hooks(hook_entries, prune=prune)
+    if "starFactory" in selected:
+        starfactory.apply_mcp(mcp_entries, prune=prune)
+        starfactory.apply_hooks(hook_entries, prune=prune)
+    if "codex" in selected:
+        # MCP 与 Hooks 可能写同一份 config.toml，必须一次读改写
+        codex.apply_all(mcp_entries, hook_entries, prune=prune)
 
 
 def load_inventory() -> tuple[list[McpEntry], list[HookEntry]]:
@@ -81,13 +99,14 @@ def check(
     mcp_entries: list[McpEntry],
     hook_entries: list[HookEntry],
     only: str | None = None,
+    hosts: list[str] | None = None,
 ) -> CheckResult:
-    """对所选域执行 check 并汇总结果。"""
+    """对所选域、所选宿主执行 check 并汇总结果。"""
     results: list[CheckResult] = []
     if only in (None, "mcp"):
-        results.append(check_mcp(mcp_entries))
+        results.append(check_mcp(mcp_entries, hosts=hosts))
     if only in (None, "hooks"):
-        results.append(check_hooks(hook_entries))
+        results.append(check_hooks(hook_entries, hosts=hosts))
     if not results:
         return CheckResult(gaps=[], drift=[], file_error=False)
     return _merge_check_results(results)
@@ -98,15 +117,16 @@ def apply(
     hook_entries: list[HookEntry],
     only: str | None = None,
     prune: bool = False,
+    hosts: list[str] | None = None,
 ) -> None:
-    """对所选域执行 apply。"""
+    """对所选域、所选宿主执行 apply。"""
     if only is None:
-        apply_all(mcp_entries, hook_entries, prune=prune)
+        apply_all(mcp_entries, hook_entries, prune=prune, hosts=hosts)
         return
     if only == "mcp":
-        apply_mcp(mcp_entries, prune=prune)
+        apply_mcp(mcp_entries, prune=prune, hosts=hosts)
         return
-    apply_hooks(hook_entries, prune=prune)
+    apply_hooks(hook_entries, prune=prune, hosts=hosts)
 
 
 def _codex_hooks_path() -> Path | None:
@@ -116,8 +136,11 @@ def _codex_hooks_path() -> Path | None:
     return path
 
 
-def collect_apply_paths(only: str | None = None) -> list[Path]:
+def collect_apply_paths(
+    only: str | None = None, hosts: list[str] | None = None
+) -> list[Path]:
     """收集 apply 可能写入的目标文件路径（去重）。"""
+    selected = set(_selected_hosts(hosts))
     paths: list[Path] = []
     seen: set[Path] = set()
 
@@ -127,15 +150,21 @@ def collect_apply_paths(only: str | None = None) -> list[Path]:
             paths.append(path)
 
     if only in (None, "mcp"):
-        add(cursor.mcp_path())
-        add(codex.mcp_path())
-        add(starfactory.mcp_path())
+        if "cursor" in selected:
+            add(cursor.mcp_path())
+        if "codex" in selected:
+            add(codex.mcp_path())
+        if "starFactory" in selected:
+            add(starfactory.mcp_path())
     if only in (None, "hooks"):
-        add(cursor.hooks_path())
-        add(starfactory.hooks_path())
-        hooks_path = _codex_hooks_path()
-        if hooks_path is not None:
-            add(hooks_path)
+        if "cursor" in selected:
+            add(cursor.hooks_path())
+        if "starFactory" in selected:
+            add(starfactory.hooks_path())
+        if "codex" in selected:
+            hooks_path = _codex_hooks_path()
+            if hooks_path is not None:
+                add(hooks_path)
     return paths
 
 

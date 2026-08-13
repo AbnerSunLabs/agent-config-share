@@ -12,8 +12,9 @@
 python3 scripts/agent-config sync              # 默认只检查
 python3 scripts/agent-config sync --apply      # 合并写入（写入前自动备份）
 python3 scripts/agent-config sync --apply --prune
-python3 scripts/agent-config sync --only mcp
-python3 scripts/agent-config sync --only hooks
+python3 scripts/agent-config sync --only mcp --host cursor
+python3 scripts/agent-config sync --apply --only hooks --host starFactory
+python3 scripts/agent-config sync --apply --host cursor --host codex
 ```
 
 退出码：`0` 无缺口；`1` 有缺口；`2` 目标文件缺失/解析失败或清单 schema 错误。

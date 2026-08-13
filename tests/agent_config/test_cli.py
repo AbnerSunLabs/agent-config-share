@@ -138,3 +138,42 @@ def test_sync_check_mcp_aggregates_three_hosts(tmp_path, monkeypatch):
     )
     result = sync.check_mcp(entries)
     assert result.file_error is True
+
+
+def test_host_cursor_ignores_broken_starfactory(tmp_path, monkeypatch):
+    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    inv = tmp_path / "inv"
+    inv.mkdir()
+    (inv / "mcp.yaml").write_text("mcp: []\n")
+    (inv / "hooks.yaml").write_text("hooks: []\n")
+    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    (tmp_path / ".starFactory.json").write_text("{")
+    (tmp_path / ".cursor").mkdir()
+    (tmp_path / ".cursor" / "mcp.json").write_text('{"mcpServers": {}}')
+    assert main(["sync", "--only", "mcp", "--host", "cursor"]) == 0
+
+
+def test_host_cursor_apply_does_not_write_codex(tmp_path, monkeypatch):
+    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    inv = tmp_path / "inv"
+    inv.mkdir()
+    (inv / "mcp.yaml").write_text(
+        "mcp:\n"
+        "  - id: srv\n"
+        "    hosts: [cursor, codex]\n"
+        "    transport: stdio\n"
+        "    command: echo\n"
+        "    args: []\n"
+    )
+    (inv / "hooks.yaml").write_text("hooks: []\n")
+    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    (tmp_path / ".cursor").mkdir()
+    (tmp_path / ".cursor" / "mcp.json").write_text('{"mcpServers": {}}')
+    (tmp_path / ".codex").mkdir()
+    (tmp_path / ".codex" / "config.toml").write_text('model = "x"\n')
+    assert main(["sync", "--apply", "--only", "mcp", "--host", "cursor"]) == 0
+    import json
+
+    data = json.loads((tmp_path / ".cursor" / "mcp.json").read_text())
+    assert "srv" in data["mcpServers"]
+    assert "srv" not in (tmp_path / ".codex" / "config.toml").read_text()
