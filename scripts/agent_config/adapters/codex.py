@@ -9,7 +9,7 @@ from typing import Any
 
 from agent_config.envmerge import merge_env_map, ref_for
 from agent_config.envmerge import _ref_name  # noqa: PLC2701 — 复用引用解析
-from agent_config.models import CheckResult, McpEntry
+from agent_config.models import CheckResult, HookEntry, McpEntry
 from agent_config.paths import home
 
 HOST = "codex"
@@ -46,24 +46,31 @@ def _format_toml_value(value: Any) -> str:
     if isinstance(value, float):
         return repr(value)
     if isinstance(value, list):
+        if value and all(isinstance(item, dict) for item in value):
+            inner = ", ".join(_format_inline_table(item) for item in value)
+            return f"[{inner}]"
         inner = ", ".join(_format_toml_value(item) for item in value)
         return f"[{inner}]"
     raise TypeError(f"不支持的 TOML 值类型: {type(value)!r}")
 
 
+def _format_inline_table(table: dict[str, Any]) -> str:
+    parts = [f"{k} = {_format_toml_value(v)}" for k, v in table.items()]
+    return "{" + ", ".join(parts) + "}"
+
+
 def _dump_nested_tables(parent: str, table: dict[str, Any], lines: list[str]) -> None:
-    for name, content in table.items():
-        if not isinstance(content, dict):
-            continue
-        scalars = {k: v for k, v in content.items() if not isinstance(v, dict)}
-        nested = {k: v for k, v in content.items() if isinstance(v, dict)}
-        if scalars:
-            lines.append("")
-            lines.append(f"[{parent}.{name}]")
-            for k, v in scalars.items():
-                lines.append(f"{k} = {_format_toml_value(v)}")
-        if nested:
-            _dump_nested_tables(f"{parent}.{name}", nested, lines)
+    scalars = {k: v for k, v in table.items() if not isinstance(v, dict)}
+    nested = {k: v for k, v in table.items() if isinstance(v, dict)}
+
+    if scalars:
+        lines.append("")
+        lines.append(f"[{parent}]")
+        for k, v in scalars.items():
+            lines.append(f"{k} = {_format_toml_value(v)}")
+
+    for name, content in nested.items():
+        _dump_nested_tables(f"{parent}.{name}", content, lines)
 
 
 def _host_entries(entries: list[McpEntry]) -> list[McpEntry]:
@@ -209,6 +216,11 @@ def apply_mcp(entries: list[McpEntry], prune: bool) -> None:
     if file_error or data is None:
         return
 
+    _apply_mcp_to_data(data, entries, prune)
+    _write_data(data)
+
+
+def _apply_mcp_to_data(data: dict[str, Any], entries: list[McpEntry], prune: bool) -> None:
     servers: dict[str, Any] = data.setdefault("mcp_servers", {})
     wanted = _host_entries(entries)
     wanted_ids = {e.id for e in wanted}
@@ -236,4 +248,280 @@ def apply_mcp(entries: list[McpEntry], prune: bool) -> None:
         for name in to_remove:
             del servers[name]
 
+
+def hooks_json_path() -> Path:
+    return home() / ".codex" / "hooks.json"
+
+
+def resolve_hooks_target() -> tuple[Path, str]:
+    hooks_json = hooks_json_path()
+    config_toml = mcp_path()
+
+    if hooks_json.exists():
+        return hooks_json, "hooks_json"
+
+    if config_toml.exists():
+        try:
+            raw = tomllib.loads(config_toml.read_text(encoding="utf-8"))
+            if isinstance(raw, dict) and "hooks" in raw:
+                return config_toml, "config_toml"
+        except (tomllib.TOMLDecodeError, OSError):
+            pass
+
+    return hooks_json, "hooks_json"
+
+
+def _host_hook_entries(entries: list[HookEntry]) -> list[HookEntry]:
+    return [e for e in entries if HOST in e.hosts]
+
+
+def _find_hook_index(hooks: list[Any], entry: HookEntry) -> int | None:
+    adapter = entry.adapters[HOST]
+    command = adapter.get("command")
+    event = adapter.get("event")
+
+    for i, hook in enumerate(hooks):
+        if not isinstance(hook, dict):
+            continue
+        if hook.get("agent_config_id") == entry.id:
+            return i
+
+    for i, hook in enumerate(hooks):
+        if not isinstance(hook, dict):
+            continue
+        if command is not None and hook.get("command") != command:
+            continue
+        if event is not None and hook.get("event") != event:
+            continue
+        if command is not None or event is not None:
+            return i
+    return None
+
+
+def _upsert_hook(entry: HookEntry, existing: dict[str, Any] | None) -> dict[str, Any]:
+    base = dict(existing) if existing else {}
+    base.update(entry.adapters[HOST])
+    base["agent_config_id"] = entry.id
+    return base
+
+
+def _hook_matches(entry: HookEntry, actual: dict[str, Any]) -> bool:
+    if actual.get("agent_config_id") != entry.id:
+        return False
+    adapter = entry.adapters[HOST]
+    for key, val in adapter.items():
+        if actual.get(key) != val:
+            return False
+    return True
+
+
+def _prune_hooks_list(
+    hooks: list[Any],
+    wanted_ids: set[str],
+    entries: list[HookEntry],
+) -> list[Any]:
+    result: list[Any] = []
+    for hook in hooks:
+        if not isinstance(hook, dict):
+            result.append(hook)
+            continue
+        marker = hook.get("agent_config_id")
+        if not marker:
+            result.append(hook)
+            continue
+        if marker not in wanted_ids:
+            continue
+        entry = next((e for e in entries if e.id == marker), None)
+        if entry is None or HOST not in entry.hosts:
+            continue
+        result.append(hook)
+    return result
+
+
+def _apply_hooks_to_data(data: dict[str, Any], entries: list[HookEntry], prune: bool) -> None:
+    hooks_table = data.setdefault("hooks", {})
+    if not isinstance(hooks_table, dict):
+        return
+    managed = hooks_table.get("managed", [])
+    if not isinstance(managed, list):
+        managed = []
+
+    wanted = _host_hook_entries(entries)
+    wanted_ids = {e.id for e in wanted}
+
+    for entry in wanted:
+        idx = _find_hook_index(managed, entry)
+        existing = managed[idx] if idx is not None and isinstance(managed[idx], dict) else None
+        new_hook = _upsert_hook(entry, existing)
+        if idx is not None:
+            managed[idx] = new_hook
+        else:
+            managed.append(new_hook)
+
+    if prune:
+        managed = _prune_hooks_list(managed, wanted_ids, entries)
+
+    hooks_table["managed"] = managed
+
+
+def _load_hooks_json() -> tuple[dict[str, Any] | None, bool]:
+    path = hooks_json_path()
+    if not path.exists():
+        return None, False
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None, True
+    if not isinstance(raw, dict):
+        return None, True
+    hooks = raw.get("hooks")
+    if hooks is not None and not isinstance(hooks, list):
+        return None, True
+    if "hooks" not in raw:
+        raw["hooks"] = []
+    return raw, False
+
+
+def _write_hooks_json(data: dict[str, Any]) -> None:
+    path = hooks_json_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _get_managed_hooks(data: dict[str, Any]) -> list[Any]:
+    hooks_table = data.get("hooks", {})
+    if not isinstance(hooks_table, dict):
+        return []
+    managed = hooks_table.get("managed", [])
+    if not isinstance(managed, list):
+        return []
+    return managed
+
+
+def check_hooks(entries: list[HookEntry]) -> CheckResult:
+    path, kind = resolve_hooks_target()
+    wanted = _host_hook_entries(entries)
+    wanted_ids = {e.id for e in wanted}
+    gaps: list[str] = []
+    drift: list[str] = []
+
+    if kind == "hooks_json":
+        data, file_error = _load_hooks_json()
+        if file_error:
+            return CheckResult(gaps=[], drift=[], file_error=True)
+        hooks: list[Any] = data.get("hooks", []) if data is not None else []
+        if data is None and wanted:
+            return CheckResult(gaps=[e.id for e in wanted], drift=[], file_error=False)
+
+        for entry in wanted:
+            idx = _find_hook_index(hooks, entry)
+            if idx is None:
+                gaps.append(entry.id)
+                continue
+            actual = hooks[idx]
+            if not isinstance(actual, dict) or not _hook_matches(entry, actual):
+                gaps.append(entry.id)
+
+        for i, hook in enumerate(hooks):
+            if not isinstance(hook, dict):
+                continue
+            marker = hook.get("agent_config_id")
+            if not marker:
+                continue
+            if marker not in wanted_ids:
+                drift.append(str(i))
+                continue
+            entry = next(e for e in entries if e.id == marker)
+            if HOST not in entry.hosts:
+                drift.append(str(i))
+
+        return CheckResult(gaps=gaps, drift=drift, file_error=False)
+
+    data, file_error = _load_data()
+    if file_error:
+        return CheckResult(gaps=[], drift=[], file_error=True)
+    if data is None:
+        if wanted:
+            return CheckResult(gaps=[e.id for e in wanted], drift=[], file_error=False)
+        return CheckResult(gaps=[], drift=[], file_error=False)
+
+    hooks = _get_managed_hooks(data)
+    for entry in wanted:
+        idx = _find_hook_index(hooks, entry)
+        if idx is None:
+            gaps.append(entry.id)
+            continue
+        actual = hooks[idx]
+        if not isinstance(actual, dict) or not _hook_matches(entry, actual):
+            gaps.append(entry.id)
+
+    for i, hook in enumerate(hooks):
+        if not isinstance(hook, dict):
+            continue
+        marker = hook.get("agent_config_id")
+        if not marker:
+            continue
+        if marker not in wanted_ids:
+            drift.append(str(i))
+            continue
+        entry = next(e for e in entries if e.id == marker)
+        if HOST not in entry.hosts:
+            drift.append(str(i))
+
+    return CheckResult(gaps=gaps, drift=drift, file_error=False)
+
+
+def apply_hooks(entries: list[HookEntry], prune: bool) -> None:
+    _, kind = resolve_hooks_target()
+    if kind == "hooks_json":
+        data, file_error = _load_hooks_json()
+        if file_error:
+            return
+        if data is None:
+            data = {"hooks": []}
+        hooks: list[Any] = data.setdefault("hooks", [])
+        wanted = _host_hook_entries(entries)
+        wanted_ids = {e.id for e in wanted}
+
+        for entry in wanted:
+            idx = _find_hook_index(hooks, entry)
+            existing = hooks[idx] if idx is not None and isinstance(hooks[idx], dict) else None
+            new_hook = _upsert_hook(entry, existing)
+            if idx is not None:
+                hooks[idx] = new_hook
+            else:
+                hooks.append(new_hook)
+
+        if prune:
+            hooks[:] = _prune_hooks_list(hooks, wanted_ids, entries)
+
+        _write_hooks_json(data)
+        return
+
+    data, file_error = _load_data()
+    if file_error or data is None:
+        return
+    _apply_hooks_to_data(data, entries, prune)
     _write_data(data)
+
+
+def apply_all(
+    mcp_entries: list[McpEntry],
+    hook_entries: list[HookEntry],
+    prune: bool = False,
+) -> None:
+    _, kind = resolve_hooks_target()
+    if kind == "config_toml":
+        data, file_error = _load_data()
+        if file_error or data is None:
+            return
+        _apply_mcp_to_data(data, mcp_entries, prune)
+        _apply_hooks_to_data(data, hook_entries, prune)
+        _write_data(data)
+        return
+
+    apply_mcp(mcp_entries, prune)
+    apply_hooks(hook_entries, prune)
