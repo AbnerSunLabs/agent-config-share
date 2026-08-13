@@ -1,0 +1,24 @@
+docs/superpowers/specs/2026-08-13-agent-config-mcp-hooks-share-design.md
+  s_090dfe7fb71328::t_6119dfce34dc8b 91,122,176,178,180-188,192-194,199,235
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "88f948e092d1b60d9001fa6f8dbc320f3a934355",
+  "prompts": {},
+  "humans": {
+    "h_14565e8b179df6": {
+      "author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  },
+  "sessions": {
+    "s_090dfe7fb71328": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e4ba0868-150a-4003-a67b-781ccfa982d2",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
