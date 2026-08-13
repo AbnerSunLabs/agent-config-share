@@ -1,0 +1,21 @@
+scripts/agent_config/adapters/cursor.py
+  s_02e7163f44d825::t_26563faa7b3116 63-64,76-77
+tests/agent_config/test_cursor_mcp.py
+  s_02e7163f44d825::t_0fdf6ffc45310f 50-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "e6181ce14a40a6936e5a3d529b9150ed71e13993",
+  "prompts": {},
+  "sessions": {
+    "s_02e7163f44d825": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d5d5361c-bd90-42cd-92a3-5b2414a8eb56",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
