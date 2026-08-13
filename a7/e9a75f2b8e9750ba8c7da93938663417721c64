@@ -1,0 +1,23 @@
+scripts/agent_config/models.py
+  s_adfd7fa096b232::t_27fb4ebac01ca3 1,8-27
+scripts/agent_config/schema.py
+  s_adfd7fa096b232::t_a73318afb45a32 1-167
+tests/agent_config/test_schema.py
+  s_adfd7fa096b232::t_68e653faef3bd6 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a7e9a75f2b8e9750ba8c7da93938663417721c64",
+  "prompts": {},
+  "sessions": {
+    "s_adfd7fa096b232": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "83a04b60-ed5c-4056-8e18-87e4c259b725",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
