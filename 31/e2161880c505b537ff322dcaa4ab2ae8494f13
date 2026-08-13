@@ -1,0 +1,19 @@
+.gitignore
+  s_5cdbcb24d400c0::t_f3e0a6642e58d0 3-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "31e2161880c505b537ff322dcaa4ab2ae8494f13",
+  "prompts": {},
+  "sessions": {
+    "s_5cdbcb24d400c0": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e1e2ef50-2663-4805-ad10-2859edf36664",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
