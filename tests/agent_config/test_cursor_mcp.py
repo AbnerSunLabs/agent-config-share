@@ -47,6 +47,44 @@ def test_prune_skips_unmarked_extra(tmp_path, monkeypatch):
     assert "ctx" not in data["mcpServers"]
 
 
+def test_check_reports_gap_when_env_value_empty(tmp_path, monkeypatch):
+    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    p = tmp_path / ".cursor" / "mcp.json"
+    p.parent.mkdir(parents=True)
+    p.write_text(
+        json.dumps(
+            {
+                "mcpServers": {
+                    "ctx": {
+                        "command": "npx",
+                        "args": [],
+                        "agentConfigId": "ctx",
+                        "env": {"K": ""},
+                    },
+                }
+            }
+        )
+    )
+    entries = parse_mcp(
+        {
+            "mcp": [
+                {
+                    "id": "ctx",
+                    "hosts": ["cursor"],
+                    "transport": "stdio",
+                    "command": "npx",
+                    "args": [],
+                    "env": ["K"],
+                }
+            ]
+        }
+    )
+    result = cursor.check_mcp(entries)
+    assert result.file_error is False
+    assert "ctx" in result.gaps
+    assert result.drift == []
+
+
 def test_check_reports_gap_when_server_missing(tmp_path, monkeypatch):
     monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
     entries = parse_mcp(

@@ -60,6 +60,8 @@ def _env_refs_ok(env: dict[str, str], wanted: list[str]) -> bool:
         if name not in env:
             return False
         val = env[name]
+        if not val:
+            return False
         ref_name = _ref_name(val, HOST)
         if ref_name is not None and ref_name != name:
             return False
@@ -71,6 +73,8 @@ def _headers_refs_ok(headers: dict[str, str], headers_env: dict[str, str]) -> bo
         if header_name not in headers:
             return False
         val = headers[header_name]
+        if not val:
+            return False
         ref_name = _ref_name(val, HOST)
         if ref_name is not None and ref_name != env_name:
             return False
