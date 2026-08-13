@@ -13,7 +13,7 @@
 成功标准：
 
 1. 新增或修改一条公共 MCP / Hook，只改 `inventory/` 下对应 yaml，再 `sync --apply`，三家声明了 `hosts` 的入口都出现等价配置。
-2. `sync --check` 能报出：清单有而宿主无（缺口）、清单无而宿主有且曾由本工具写入（漂移，仅 `--prune` 才删）、宿主文件损坏（跳过并失败）。
+2. `sync --check` 能报出：清单有而宿主无（缺口，退出 1）；清单无而宿主有且带本工具标记（漂移警告，默认不因此失败；仅 `--prune` 才删）；禁止创建或损坏的宿主文件（跳过，退出 2）。
 3. 运行后宿主文件中**非清单管理字段**（模型、插件、密钥取值、UI 项）保持不变。
 4. 仓库内任何提交物都不含 Token / API Key 字面量。
 
@@ -54,7 +54,15 @@ python3 scripts/agent-config sync --only mcp
 python3 scripts/agent-config sync --only hooks
 ```
 
-未带 `--apply` 时等同 `--check`：只打印 diff，退出码 0 = 无缺口；1 = 有缺口或漂移；2 = 文件错误。`--apply` 成功写入后缺口消失则退出 0。
+未带 `--apply` 时等同 `--check`：只打印 diff。退出码：
+
+| 码 | 含义 |
+| -- | ---- |
+| 0 | 对所选域：无缺口；若未开 `--prune`，托管漂移只警告仍可 0（见 §5） |
+| 1 | 有缺口（清单有、目标无或内容不满足 upsert 后的期望非密钥字段） |
+| 2 | 目标文件缺失（禁止创建的那种）或解析失败 |
+
+`--apply` 在写入完成后按**写后状态**再算一遍：缺口已补则不再因先前缺口而报 1。未开 `--prune` 时，多余的托管条目只打印警告、**不**把退出码打成 1。`--only mcp` / `--only hooks` **不读取、不校验、不因未选中域的文件损坏而失败**。
 
 ---
 
@@ -74,13 +82,31 @@ python3 scripts/agent-config sync --only hooks
 | `env` | 否 | **只写环境变量名**的列表，如 `[CONTEXT7_API_KEY]`。禁止写值 |
 | `headers_env` | 否 | http 时：HTTP 头名 → 环境变量名，如 `Authorization: FOO_TOKEN` |
 
+**托管标记（MCP 与 Hooks 同一规则）：**
+
+- JSON 对象：写入 `"agentConfigId": "<id>"`。
+- TOML 表：写入 `agent_config_id = "<id>"`。
+- 若某宿主加载器会因未知字段拒绝配置，该宿主适配器 **禁止写标记**，且对该宿主 **禁用 prune、不把「现场有同名但无标记」报成托管漂移**（upsert 仍按 `id` == 服务器名 / 约定 hook 槽位）。V1 默认假定 Cursor JSON、Codex TOML 未知键可保留；实现时用最小样例验证，若验证失败则按「禁标记」降级并在 `--check` 打一行警告。
+
+`--prune` 只删除 **带本工具标记** 且清单已无该 `id` 的条目。无标记条目（含用户手加、同名但无标记）永不 prune。
+
 宿主展开规则（适配器内实现，清单不写三份 JSON）：
 
-- **Cursor** `~/.cursor/mcp.json`：`mcpServers.<id>`；`env` 写成 `"${env:VAR}"` 或 Cursor 文档等价形式，**不写真实值**。
-- **Codex** `~/.codex/config.toml`：只改 MCP 相关表；`env` 用 Codex 的 env 展开语法，不写真实值。
-- **starFactory** `~/.starFactory.json`：只 merge 顶层（user scope）`mcpServers.<id>`。Token 需要时只写 `--env` / header 的**变量引用**，与现有条目已有的密钥字面量：**若现场已有值则保留现场值，清单不覆盖为清空**。
+- **Cursor** `~/.cursor/mcp.json`：`mcpServers.<id>`，并写 `agentConfigId`。
+- **Codex** `~/.codex/config.toml`：只改 MCP 相关表，并写 `agent_config_id`。
+- **starFactory** `~/.starFactory.json`：只 merge 顶层（user scope）`mcpServers.<id>`，并写 `agentConfigId`。
 
 `hosts` 未包含的宿主：check 不报缺口，apply 不写入、不删除该宿主上同名服务器（即使名字碰巧相同）。
+
+**`env` / 密钥取值（三家同一 merge 顺序，满足「不把密钥取值改掉」）：**
+
+对每个清单声明的变量名 `VAR`：
+
+1. 现场该键已有**非空字面量**（不是 env 引用）→ **原样保留**，不改写成引用、不清空。
+2. 现场缺失该键，或值为空 → 写入该宿主的 env **引用**（Cursor：`"${env:VAR}"` 或文档等价；Codex / starFactory：各自展开语法）。**禁止**从环境或 `.env` 读出真实值再写入。
+3. 现场已是 env 引用 → 保留引用形式；若引用的变量名与清单不一致，check 报缺口，apply 改成清单中的变量名（仍不写字面量）。
+
+http 的 `headers_env` 同样按 1–3 处理。新建服务器对象时走第 2 步。
 
 ### 4.2 `inventory/hooks.yaml`
 
@@ -93,13 +119,46 @@ python3 scripts/agent-config sync --only hooks
 
 V1 不发明跨宿主统一事件名。`adapters.cursor` / `adapters.codex` / `adapters.starFactory` 的键名按该宿主官方 schema 填写；缺某个已声明 host 的 adapter 块则 schema 校验失败。
 
-匹配与 upsert：
+匹配与 upsert：每个 adapter 块映射到宿主文件里**一条** hook。识别顺序：先 `agentConfigId` / `agent_config_id`，否则该宿主若禁标记则按 yaml 里写死的 `command` + 事件名匹配（只用于 upsert，不用于 prune）。禁止三家共用一份 hooks 文件或互相软链。
 
-- 每个 adapter 块必须能映射到宿主文件里的**一条** hook。
-- 写入时带稳定标记：在该宿主格式允许额外字段时写入 `"agentConfigId": "<id>"`（或 TOML 等价）。若官方 schema 会因未知字段拒绝加载，则改为匹配 `command` + 事件名（在 yaml 里写死），并在 check 报告中注明「无 id 标记，按 command 匹配」。
-- 禁止三家共用一份 hooks 文件或互相软链。
+### 4.3 清单示例（形状以字段为准，值可替换）
 
-### 4.3 密钥
+`inventory/mcp.yaml`：
+
+```yaml
+mcp:
+  - id: context7
+    hosts: [cursor, codex, starFactory]
+    transport: stdio
+    command: npx
+    args: ["-y", "@upstash/context7-mcp"]
+    env: [CONTEXT7_API_KEY]
+  - id: some-http-mcp
+    hosts: [cursor]
+    transport: http
+    url: https://example.invalid/mcp
+    headers_env:
+      Authorization: SOME_MCP_TOKEN
+```
+
+`inventory/hooks.yaml`：`adapters` 内键名用各宿主官方字段；下面仅示意结构。
+
+```yaml
+hooks:
+  - id: git-ai-checkpoint
+    hosts: [codex, starFactory]
+    intent: git-ai checkpoint
+    adapters:
+      codex:
+        command: git-ai
+        # 其余键按 Codex hooks schema 补全
+      starFactory:
+        event: SessionEnd
+        matcher: claude
+        # 其余键按 starFactory settings.hooks schema 补全
+```
+
+### 4.4 密钥
 
 - 清单、脚本、文档示例只允许变量**名**。
 - apply 不得把环境里的真实值展开进目标文件（除非该宿主格式除引用外无法表达——V1 若遇到则 skip 该条并警告，仍不写字面量）。
@@ -122,14 +181,15 @@ V1 不发明跨宿主统一事件名。`adapters.cursor` / `adapters.codex` / `a
 
 **文件不存在时：**
 
-- check：记为缺口（若清单对该宿主有条目）。
-- apply：仅创建**该工具负责的最小文件**（例如只有 `mcpServers` 的 `mcp.json`，或只有 `hooks` 的 `hooks.json`）。**禁止**为了写 MCP 而生成一份默认的完整 `~/.starFactory.json` 或完整 `config.toml`；若 `~/.starFactory.json` / `config.toml` 不存在，skip 并失败（需用户先有产品自己的配置文件）。`~/.cursor/mcp.json` 与 `hooks.json` 允许从最小骨架创建。
+| 文件 | 不存在时 |
+| ---- | -------- |
+| `~/.cursor/mcp.json`、`~/.cursor/hooks.json`、`~/.codex/hooks.json` | check 记缺口；apply 可写最小骨架（仅 `mcpServers` 或 hooks 数组/对象） |
+| `~/.codex/config.toml`、`~/.starFactory.json`、`~/.starFactory/settings.json` | check/apply 均 skip 该文件并以退出码 2 失败；**禁止**创建这些「产品主配置」 |
 
 **merge：**
 
-- `--apply`：按 `id` upsert 清单条目；其它键原样保留。
-- `--prune`：删除「带本工具 `agentConfigId` 标记、且清单中已无该 id」的条目。无标记的宿主自有 MCP/Hook **永不** prune。
-- 默认 apply **不** prune。
+- `--apply`：按 `id` upsert 清单条目（MCP 服务器名 = `id`；Hook 按 §4.2）；其它键原样保留。
+- `--prune`：只删带本工具标记且清单已无该 id 的条目。默认 apply **不** prune。
 
 **备份：** `--apply` 对每个将改文件先复制到系统临时目录（不进 git、不写仓库）。失败不回滚已成功的其它文件，但退出码非 0，并列出已改 / 未改路径。
 
@@ -163,9 +223,9 @@ inventory/mcp.yaml + inventory/hooks.yaml
 
 ## 8. 验收
 
-1. 清单增加一条 `hosts: [cursor, codex, starFactory]` 的 stdio MCP，`--apply` 后三家用户级入口都能查到同名服务器，且文件中无密钥字面量（Cursor 为 env 引用）。
+1. 清单增加一条 `hosts: [cursor, codex, starFactory]` 的 stdio MCP（含 `env` 变量名），`--apply` 后三家用户级入口都能查到同名服务器且带托管标记。新建的 `env` 键为引用而非字面量；若某宿主该键事先已有字面量，apply 后字面量仍在。
 2. 清单增加一条仅 `hosts: [codex, starFactory]` 的 hook（可按本机已有 git-ai 意图填写 adapters），Cursor hooks 文件不被写入该条。
-3. 在 Cursor `mcp.json` 手加一个清单没有的服务器，默认 `--apply` 后该服务器仍在；`--prune` 后若其无 `agentConfigId` 则仍在。
+3. 在 Cursor `mcp.json` 手加一个清单没有、也无 `agentConfigId` 的服务器，默认 `--apply` 与 `--prune` 后该服务器都仍在。清单曾写入且带标记、后来从 yaml 删除的条目，仅 `--prune` 后消失。
 4. 破坏 `~/.starFactory.json` 为非法 JSON，`--check`/`--apply` 跳过该文件并以退出码 2 结束，Cursor/Codex 文件若本来合法仍按规则处理（apply 已改的不强制回滚）。
 5. `inventory/` 与 `scripts/` 的 git diff 中无真实密钥。
 
