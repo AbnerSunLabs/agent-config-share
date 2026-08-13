@@ -18,6 +18,13 @@ class McpEntry:
 
 
 @dataclass
+class CheckResult:
+    gaps: list[str]
+    drift: list[str]
+    file_error: bool
+
+
+@dataclass
 class HookEntry:
     id: str
     hosts: list[str]
