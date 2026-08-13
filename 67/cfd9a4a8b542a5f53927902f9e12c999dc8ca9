@@ -1,0 +1,35 @@
+scripts/agent_config/paths.py
+  s_f42cdcc2d78403::t_fc20e3c15aad6c 1-24
+tests/agent_config/conftest.py
+  s_f42cdcc2d78403::t_096925c2645741 1-5
+scripts/agent_config/cli.py
+  s_f42cdcc2d78403::t_af51e9488a0db9 1-2
+scripts/requirements.txt
+  s_f42cdcc2d78403::t_c987fc5699a952 1-2
+inventory/mcp.yaml
+  s_f42cdcc2d78403::t_6e5d88caeb5066 1
+tests/agent_config/test_load_inventory.py
+  s_f42cdcc2d78403::t_bea94f5b347ebf 1-12
+scripts/agent-config
+  s_f42cdcc2d78403::t_2c70ae7cf99055 1-7
+scripts/agent_config/models.py
+  s_f42cdcc2d78403::t_f09fd4983d2e4e 1-13
+inventory/hooks.yaml
+  s_f42cdcc2d78403::t_d422a8d5592228 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "67cfd9a4a8b542a5f53927902f9e12c999dc8ca9",
+  "prompts": {},
+  "sessions": {
+    "s_f42cdcc2d78403": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "0d2deb4d-b688-425d-a0a9-bfc93fb6b3c0",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
