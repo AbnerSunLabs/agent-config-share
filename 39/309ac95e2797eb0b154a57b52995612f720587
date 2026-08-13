@@ -1,0 +1,23 @@
+scripts/agent_config/envmerge.py
+  s_adfd7fa096b232::t_176633b4ab2a4d 1-45
+scripts/agent_config/redact.py
+  s_adfd7fa096b232::t_8c91b436c401ae 1-26
+tests/agent_config/test_envmerge.py
+  s_adfd7fa096b232::t_bc419c41385af4 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "39309ac95e2797eb0b154a57b52995612f720587",
+  "prompts": {},
+  "sessions": {
+    "s_adfd7fa096b232": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "83a04b60-ed5c-4056-8e18-87e4c259b725",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
