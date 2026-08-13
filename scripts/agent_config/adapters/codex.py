@@ -253,22 +253,24 @@ def hooks_json_path() -> Path:
     return home() / ".codex" / "hooks.json"
 
 
-def resolve_hooks_target() -> tuple[Path, str]:
+def resolve_hooks_target() -> tuple[Path, str, bool]:
+    """解析 Codex hooks 落点；config.toml 存在但不可解析时第三项为 True。"""
     hooks_json = hooks_json_path()
     config_toml = mcp_path()
 
     if hooks_json.exists():
-        return hooks_json, "hooks_json"
+        return hooks_json, "hooks_json", False
 
     if config_toml.exists():
         try:
             raw = tomllib.loads(config_toml.read_text(encoding="utf-8"))
-            if isinstance(raw, dict) and "hooks" in raw:
-                return config_toml, "config_toml"
         except (tomllib.TOMLDecodeError, OSError):
-            pass
+            # 禁止回落 hooks.json，避免在含 [hooks] 但损坏的 toml 旁路创建 json
+            return config_toml, "config_toml", True
+        if isinstance(raw, dict) and "hooks" in raw:
+            return config_toml, "config_toml", False
 
-    return hooks_json, "hooks_json"
+    return hooks_json, "hooks_json", False
 
 
 def _host_hook_entries(entries: list[HookEntry]) -> list[HookEntry]:
@@ -402,7 +404,9 @@ def _get_managed_hooks(data: dict[str, Any]) -> list[Any]:
 
 
 def check_hooks(entries: list[HookEntry]) -> CheckResult:
-    path, kind = resolve_hooks_target()
+    _, kind, target_error = resolve_hooks_target()
+    if target_error:
+        return CheckResult(gaps=[], drift=[], file_error=True)
     wanted = _host_hook_entries(entries)
     wanted_ids = {e.id for e in wanted}
     gaps: list[str] = []
@@ -475,7 +479,9 @@ def check_hooks(entries: list[HookEntry]) -> CheckResult:
 
 
 def apply_hooks(entries: list[HookEntry], prune: bool) -> None:
-    _, kind = resolve_hooks_target()
+    _, kind, target_error = resolve_hooks_target()
+    if target_error:
+        return
     if kind == "hooks_json":
         data, file_error = _load_hooks_json()
         if file_error:
@@ -513,7 +519,9 @@ def apply_all(
     hook_entries: list[HookEntry],
     prune: bool = False,
 ) -> None:
-    _, kind = resolve_hooks_target()
+    _, kind, target_error = resolve_hooks_target()
+    if target_error:
+        return
     if kind == "config_toml":
         data, file_error = _load_data()
         if file_error or data is None:
