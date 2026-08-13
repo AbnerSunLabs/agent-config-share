@@ -1,0 +1,25 @@
+scripts/agent_config/adapters/codex.py
+  s_7afcaf61c3a851::t_2a03eda3af92b8 1-239
+scripts/agent_config/adapters/starfactory.py
+  s_7afcaf61c3a851::t_96dcdcb9ae4c4a 1-196
+tests/agent_config/test_codex_mcp.py
+  s_7afcaf61c3a851::t_f8b687ab25639e 1-107
+tests/agent_config/test_starfactory_mcp.py
+  s_7afcaf61c3a851::t_2b9473779fffda 1-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c5a1284396b8567411fb6dcea64bda44df49d876",
+  "prompts": {},
+  "sessions": {
+    "s_7afcaf61c3a851": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7de93655-73e5-4428-9449-deb1cde38090",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
