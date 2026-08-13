@@ -127,6 +127,13 @@ def _write_data(data: dict[str, Any]) -> None:
 
 
 def check_mcp(entries: list[McpEntry]) -> CheckResult:
+    wanted = _host_entries(entries)
+    path = mcp_path()
+    if not path.exists():
+        if not wanted:
+            return CheckResult(gaps=[], drift=[], file_error=False)
+        return CheckResult(gaps=[], drift=[], file_error=True)
+
     data, file_error = _load_data()
     if file_error:
         return CheckResult(gaps=[], drift=[], file_error=True)
@@ -271,6 +278,13 @@ def _write_hooks_data(data: dict[str, Any]) -> None:
 
 
 def check_hooks(entries: list[HookEntry]) -> CheckResult:
+    wanted = _host_hook_entries(entries)
+    path = hooks_path()
+    if not path.exists():
+        if not wanted:
+            return CheckResult(gaps=[], drift=[], file_error=False)
+        return CheckResult(gaps=[], drift=[], file_error=True)
+
     data, file_error = _load_hooks_data()
     if file_error:
         return CheckResult(gaps=[], drift=[], file_error=True)
