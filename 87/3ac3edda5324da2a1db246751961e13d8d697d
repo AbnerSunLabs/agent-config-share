@@ -1,0 +1,24 @@
+.gitignore
+  s_ae3c5afa1186df::t_20c7f50cfd187e 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "873ac3edda5324da2a1db246751961e13d8d697d",
+  "prompts": {},
+  "humans": {
+    "h_14565e8b179df6": {
+      "author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  },
+  "sessions": {
+    "s_ae3c5afa1186df": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "90b95cb3-7985-460d-a55c-1d8b0613d981",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
