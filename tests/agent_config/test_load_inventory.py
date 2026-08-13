@@ -22,4 +22,6 @@ def test_inventory_yaml_loads_and_parses():
         "git-ai-pre-tool-use",
         "git-ai-post-tool-use",
         "git-ai-stop",
+        "macos-approval-notify",
+        "macos-stop-notify",
     ]

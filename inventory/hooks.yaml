@@ -1,5 +1,6 @@
-# 用户级 Hooks 公共全集。Cursor 当前 hooks 均为注释，不写入。
+# 用户级 Hooks 公共全集。Cursor 当前 hooks.json 里的通知条目仍为注释，不写入 Cursor。
 # git-ai 二进制按本机路径；Codex 用 checkpoint codex，starFactory 用 checkpoint claude。
+# 授权通知走 Notification；对话结束走 Stop。脚本在仓库 scripts/hooks/。
 
 hooks:
   - id: git-ai-pre-tool-use
@@ -43,3 +44,24 @@ hooks:
         hooks:
           - type: command
             command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint codex --hook-input stdin
+
+  - id: macos-approval-notify
+    hosts: [starFactory]
+    intent: macOS 通知中心提醒需要授权
+    adapters:
+      starFactory:
+        event: Notification
+        matcher: "*"
+        hooks:
+          - type: command
+            command: python3 /Users/abnersun/Downloads/code/agent-config-share/scripts/hooks/notify-approval.py
+
+  - id: macos-stop-notify
+    hosts: [starFactory]
+    intent: 本轮对话结束时发 macOS 通知
+    adapters:
+      starFactory:
+        event: Stop
+        hooks:
+          - type: command
+            command: python3 /Users/abnersun/Downloads/code/agent-config-share/scripts/hooks/notify-approval.py

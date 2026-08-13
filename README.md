@@ -24,7 +24,7 @@ AI 只有在范围变化、未授权高风险操作、外部权限缺失、严�
 ## 目录说明
 
 ```text
-personal-ai-development-workflow/
+agent-config-share/
 ├── README.md
 ├── implementation-plan.md          # 本仓库建设记录，接入业务项目时可忽略
 ├── .agent-workflow/

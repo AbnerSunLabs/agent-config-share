@@ -25,3 +25,4 @@ python3 scripts/agent-config sync --apply --host cursor --host codex
 - `tech-debt` 仅 Cursor（本机 star-flow 路径）；`node_repl` 为 Codex.app 内置，不进公共清单。
 - Cursor 现有 `Figma` 与清单 `figma` 不同名，apply 会新增托管名 `figma`，旧名无标记不会被 prune。
 - 本工具不提供 Web 配置面板。
+- `macos-approval-notify` 仅 starFactory 的 `Notification`（权限/系统提醒）。`macos-stop-notify` 走 `Stop`（本轮回复结束）。Cursor 对应条目仍是注释，清单不写 Cursor。
