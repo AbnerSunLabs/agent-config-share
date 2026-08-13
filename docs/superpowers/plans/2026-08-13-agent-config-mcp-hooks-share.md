@@ -37,6 +37,7 @@
 ### Task 1: 路径、入口与空清单加载
 
 **Files:**
+
 - Create: `scripts/requirements.txt`
 - Create: `scripts/agent_config/__init__.py`
 - Create: `scripts/agent_config/paths.py`
@@ -48,6 +49,7 @@
 - Create: `tests/agent_config/test_load_inventory.py`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: `paths.repo_root() -> Path`；`paths.home() -> Path`（`AGENT_CONFIG_HOME` 或 `Path.home()`）；`paths.inventory_dir() -> Path`；`McpEntry` / `HookEntry` dataclass（本任务只要求能把空 yaml 载成 `list[dict]` 的 `load_yaml(path) -> Any`，完整 dataclass 在 Task 2）
 
@@ -143,11 +145,13 @@ EOF
 ### Task 2: 清单 schema 校验
 
 **Files:**
+
 - Modify: `scripts/agent_config/models.py`
 - Create: `scripts/agent_config/schema.py`
 - Create: `tests/agent_config/test_schema.py`
 
 **Interfaces:**
+
 - Consumes: `load_yaml`
 - Produces: `HOSTS = ("cursor", "codex", "starFactory")`；`parse_mcp(data) -> list[McpEntry]`；`parse_hooks(data) -> list[HookEntry]`；非法时 `raise SchemaError`。`McpEntry(id, hosts, transport, command=None, args=None, url=None, env=None, headers_env=None)`。`HookEntry(id, hosts, intent, adapters: dict[str, dict])`。`env` 若出现值（dict 而非 name 列表）则失败。
 
@@ -207,11 +211,13 @@ EOF
 ### Task 3: env 引用 merge 与脱敏
 
 **Files:**
+
 - Create: `scripts/agent_config/envmerge.py`
 - Create: `scripts/agent_config/redact.py`
 - Create: `tests/agent_config/test_envmerge.py`
 
 **Interfaces:**
+
 - Consumes: 无
 - Produces: `is_env_ref(value: str, host: str) -> bool`（Cursor：匹配 `${env:NAME}`；Codex/starFactory：匹配 `${NAME}`）；`merge_env_map(existing: dict[str, str], wanted_names: list[str], host: str) -> dict[str, str]` 实现 spec §4.1 三步；`ref_for(host, name) -> str`；`looks_like_secret(text) -> bool`；`safe_print` 路径不输出 secret。
 
@@ -266,12 +272,14 @@ EOF
 ### Task 4: Cursor MCP check / apply / prune
 
 **Files:**
+
 - Create: `scripts/agent_config/adapters/__init__.py`
 - Create: `scripts/agent_config/adapters/cursor.py`
 - Create: `scripts/agent_config/sync.py`（先只调 Cursor MCP；其它宿主 no-op 直到后续任务）
 - Create: `tests/agent_config/test_cursor_mcp.py`
 
 **Interfaces:**
+
 - Consumes: `McpEntry`、`merge_env_map`、`paths.home()`
 - Produces: `cursor.mcp_path() -> Path`（`home()/.cursor/mcp.json`）；`check_mcp(entries) -> CheckResult`；`apply_mcp(entries, prune: bool) -> None`。`CheckResult` 含 `gaps: list[str]`、`drift: list[str]`、`file_error: bool`。Cursor 服务器对象含 `command`/`args` 或 `url`、`env`、`headers`（由 `headers_env` 生成引用）、`agentConfigId`。允许创建最小 `{"mcpServers": {}}`。
 
@@ -339,12 +347,14 @@ EOF
 ### Task 5: starFactory 与 Codex MCP
 
 **Files:**
+
 - Create: `scripts/agent_config/adapters/starfactory.py`
 - Create: `scripts/agent_config/adapters/codex.py`
 - Create: `tests/agent_config/test_starfactory_mcp.py`
 - Create: `tests/agent_config/test_codex_mcp.py`
 
 **Interfaces:**
+
 - Consumes: `McpEntry`、`merge_env_map`
 - Produces: `starfactory.mcp_path() -> home()/.starFactory.json`，只 merge 顶层 `mcpServers`，**禁止创建**该文件（缺失或坏 JSON → `file_error`）；`codex.mcp_path() -> home()/.codex/config.toml`，只改 `mcp_servers` 表（Codex 键名按常见 `[mcp_servers.<id>]`），写 `agent_config_id`，env 引用 `${NAME}`，**禁止创建**缺失的 `config.toml`。同一 apply 里若还要改 hooks，Task 6 保证按文件串行。读 TOML 用 `tomllib`；写回用「解析为 dict → 只替换 `mcp_servers` → dump 整文件」仅当测试夹具无必须保留的无关注释；实现 `dump_toml(doc) -> str` 覆盖 string/list/table。不扫描 `mcp.yaml`。
 
@@ -408,10 +418,12 @@ EOF
 ### Task 6: Hooks 与 Codex 唯一落点
 
 **Files:**
+
 - Modify: `scripts/agent_config/adapters/cursor.py` `codex.py` `starfactory.py`
 - Create: `tests/agent_config/test_hooks.py`
 
 **Interfaces:**
+
 - Consumes: `HookEntry`
 - Produces: `check_hooks` / `apply_hooks` 每宿主各一份。Cursor：`home()/.cursor/hooks.json`，结构 `{"hooks": [ {**adapter_fields, "agentConfigId": id} ]}`（yaml `adapters.cursor` 原样并入）；可建骨架。starFactory：`home()/.starFactory/settings.json` 的 `hooks` 键，值为列表，元素为 `{**adapters.starFactory, "agentConfigId": id}`；**禁止创建** settings.json。Codex `resolve_hooks_target() -> tuple[Path, str]` 其中 kind 为 `hooks_json` 或 `config_toml`：① `hooks.json` 存在则只它；② 否则 `config.toml` 含 `hooks` 键则只 toml；③ 否则 check 记缺口，apply 创建 `hooks.json`。toml 已有 hooks 时不得创建 hooks.json。upsert 先按标记，再按 `command`+`event`（adapter 里的 `command` 与 `event` 字段，缺省则只用 command）。prune 只删带标记项。MCP+Hooks 同改 `config.toml` 时：`sync.apply_all` 读一次、改两段、写一次。
 
@@ -477,11 +489,13 @@ EOF
 ### Task 7: CLI、退出码、备份、`--only`
 
 **Files:**
+
 - Modify: `scripts/agent_config/cli.py` `sync.py`
 - Create: `tests/agent_config/test_cli.py`
 - Create: `inventory/README.md`
 
 **Interfaces:**
+
 - Consumes: 全部 check/apply
 - Produces: `main(argv: list[str] | None) -> int`。子命令仅 `sync`；flags：`--check`（默认）、`--apply`、`--prune`（必须配 `--apply`，否则退出 2）、`--only {mcp,hooks}`。`--apply` 对每个将改文件 `shutil.copy2` 到 `tempfile.mkdtemp(prefix="agent-config-")`。坏的 starFactory.json 时 Cursor 仍 apply。schema 失败退出 2。stdout 禁止打印 `sk-` 与超长 token。
 
@@ -545,18 +559,18 @@ EOF
 
 ## Spec coverage
 
-| Spec | Task |
-| ---- | ---- |
-| inventory + CLI 布局 | 1, 7（包名 `agent_config/`） |
-| schema / 无密钥值 | 2 |
-| env 三步 merge | 3, 4 |
-| Cursor/Codex/starFactory MCP 路径与禁止创建 | 4, 5 |
-| 托管标记与 prune / hosts 移除 | 4, 5, 6 |
-| Hooks 与 Codex 落点 / 双写 | 6 |
-| 同文件串行写 toml | 6–7 |
-| 退出码、`--only`、备份、脱敏 | 7 |
-| 验收 1–5 | 4–7 测试 |
-| Skills / 面板 / 项目级 / import | 不实现（非目标） |
+| Spec                                        | Task                         |
+| ------------------------------------------- | ---------------------------- |
+| inventory + CLI 布局                        | 1, 7（包名 `agent_config/`） |
+| schema / 无密钥值                           | 2                            |
+| env 三步 merge                              | 3, 4                         |
+| Cursor/Codex/starFactory MCP 路径与禁止创建 | 4, 5                         |
+| 托管标记与 prune / hosts 移除               | 4, 5, 6                      |
+| Hooks 与 Codex 落点 / 双写                  | 6                            |
+| 同文件串行写 toml                           | 6–7                          |
+| 退出码、`--only`、备份、脱敏                | 7                            |
+| 验收 1–5                                    | 4–7 测试                     |
+| Skills / 面板 / 项目级 / import             | 不实现（非目标）             |
 
 ## Placeholder scan
 
