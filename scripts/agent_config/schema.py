@@ -76,6 +76,7 @@ def _parse_mcp_entry(raw: Any, seen_ids: set[str]) -> McpEntry:
         raise SchemaError(f"id 重复: {entry_id!r}")
     seen_ids.add(entry_id)
 
+    description = _require_non_empty_str(raw.get("description"), "description")
     hosts = _parse_hosts(raw.get("hosts"), "hosts")
     transport = _require_non_empty_str(raw.get("transport"), "transport")
     if transport not in ("stdio", "http"):
@@ -107,6 +108,7 @@ def _parse_mcp_entry(raw: Any, seen_ids: set[str]) -> McpEntry:
 
     return McpEntry(
         id=entry_id,
+        description=description,
         hosts=hosts,
         transport=transport,
         command=command,
@@ -133,6 +135,7 @@ def _parse_hook_entry(raw: Any, seen_ids: set[str]) -> HookEntry:
         raise SchemaError(f"id 重复: {entry_id!r}")
     seen_ids.add(entry_id)
 
+    description = _require_non_empty_str(raw.get("description"), "description")
     hosts = _parse_hosts(raw.get("hosts"), "hosts")
     intent = _require_non_empty_str(raw.get("intent"), "intent")
 
@@ -154,6 +157,7 @@ def _parse_hook_entry(raw: Any, seen_ids: set[str]) -> HookEntry:
 
     return HookEntry(
         id=entry_id,
+        description=description,
         hosts=hosts,
         intent=intent,
         adapters=adapters,

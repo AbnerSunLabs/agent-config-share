@@ -4,6 +4,7 @@
 
 hooks:
   - id: git-ai-pre-tool-use
+    description: 工具调用前做 git-ai checkpoint
     hosts: [codex, starFactory]
     intent: git-ai checkpoint before tool
     adapters:
@@ -20,6 +21,7 @@ hooks:
             command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint claude --hook-input stdin
 
   - id: git-ai-post-tool-use
+    description: 工具调用后做 git-ai checkpoint
     hosts: [codex, starFactory]
     intent: git-ai checkpoint after tool
     adapters:
@@ -36,6 +38,7 @@ hooks:
             command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint claude --hook-input stdin
 
   - id: git-ai-stop
+    description: 会话停止时做 git-ai checkpoint
     hosts: [codex]
     intent: git-ai checkpoint on stop
     adapters:
@@ -46,6 +49,7 @@ hooks:
             command: /Users/abnersun/.local/bin/vendor/git-ai/x64-darwin/git-ai checkpoint codex --hook-input stdin
 
   - id: macos-approval-notify
+    description: 需要授权时弹出 macOS 通知
     hosts: [starFactory]
     intent: macOS 通知中心提醒需要授权
     adapters:
@@ -57,6 +61,7 @@ hooks:
             command: python3 /Users/abnersun/Downloads/code/agent-config-share/scripts/hooks/notify-approval.py
 
   - id: macos-stop-notify
+    description: 本轮对话结束时发 macOS 通知
     hosts: [starFactory]
     intent: 本轮对话结束时发 macOS 通知
     adapters:

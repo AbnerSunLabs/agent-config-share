@@ -82,6 +82,17 @@ AI 必须按下列步骤自动完成前置工作（人工只审结果，不手�
 
 路径对齐细则见 `adapters/README.md`。
 
+## 配置面板
+
+用户级 MCP / Hooks / Skills 可用本机面板浏览，并点按钮做检查与写入：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AbnerSunLabs/agent-config-share/main/install.sh | sh
+agent-config ui
+```
+
+清单与 CLI 说明见 `inventory/README.md`。
+
 ## 日常使用
 
 入口文件对齐后，**不必再粘贴长启动话术**。非琐碎开发任务默认走 `.agent-workflow/WORKFLOW.md`：

@@ -11,6 +11,7 @@ def test_starfactory_missing_file_is_error(tmp_path, monkeypatch):
             "mcp": [
                 {
                     "id": "ctx",
+                    "description": "用途",
                     "hosts": ["starFactory"],
                     "transport": "stdio",
                     "command": "npx",
@@ -32,6 +33,7 @@ def test_apply_creates_marked_server_with_env_ref(tmp_path, monkeypatch):
             "mcp": [
                 {
                     "id": "ctx",
+                    "description": "用途",
                     "hosts": ["starFactory"],
                     "transport": "stdio",
                     "command": "npx",
@@ -56,6 +58,7 @@ def test_apply_skips_when_file_missing(tmp_path, monkeypatch):
             "mcp": [
                 {
                     "id": "ctx",
+                    "description": "用途",
                     "hosts": ["starFactory"],
                     "transport": "stdio",
                     "command": "npx",

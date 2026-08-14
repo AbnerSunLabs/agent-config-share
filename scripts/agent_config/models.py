@@ -8,6 +8,7 @@ import yaml
 @dataclass
 class McpEntry:
     id: str
+    description: str
     hosts: list[str]
     transport: str
     command: str | None = None
@@ -37,6 +38,7 @@ class CheckResult:
 @dataclass
 class HookEntry:
     id: str
+    description: str
     hosts: list[str]
     intent: str
     adapters: dict[str, dict]

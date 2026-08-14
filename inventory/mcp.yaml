@@ -3,17 +3,20 @@
 
 mcp:
   - id: figma
+    description: 读取与修改 Figma 设计稿
     hosts: [cursor, codex, starFactory]
     transport: http
     url: https://mcp.figma.com/mcp
 
   - id: playwright
+    description: 浏览器自动化与页面断言
     hosts: [cursor, codex, starFactory]
     transport: stdio
     command: npx
     args: ["-y", "@playwright/mcp@latest"]
 
   - id: github
+    description: GitHub 仓库、Issue 与 PR 操作
     hosts: [cursor, codex, starFactory]
     transport: http
     url: https://api.githubcopilot.com/mcp/
@@ -21,16 +24,19 @@ mcp:
       Authorization: GITHUB_TOKEN
 
   - id: supabase
+    description: Supabase 数据库与项目（只读）
     hosts: [cursor, codex, starFactory]
     transport: http
     url: https://mcp.supabase.com/mcp?project_ref=ehbnjnracnilsrzwlzcx&read_only=true
 
   - id: vercel
+    description: Vercel 部署与项目
     hosts: [cursor, codex, starFactory]
     transport: http
     url: https://mcp.vercel.com
 
   - id: tech-debt
+    description: 技术债看板（仅 Cursor）
     hosts: [cursor]
     transport: stdio
     command: node

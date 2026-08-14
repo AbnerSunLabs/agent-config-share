@@ -28,7 +28,7 @@
 - 不整文件覆盖 `~/.codex/config.toml`、`~/.starFactory.json`、`~/.starFactory/settings.json`。
 - 不提供「从宿主反向 import 生成清单」；V1 清单由人维护。
 - 不把本工具接入业务项目的工作流安装步骤（`README.md` 接入流程保持只对齐 `adapters/` 规则入口）。
-- 不提供 skillshare 式 Web 配置面板；`agent-config ui`（按钮调用本 CLI）另开 **V1.1** spec，不在本实现范围内。
+- 不提供 skillshare 式 Web 配置面板以外的远程托管；本机面板见 [2026-08-14-agent-config-ui-design.md](./2026-08-14-agent-config-ui-design.md)。`agent-config ui` 在该 spec 范围内。
 
 ---
 

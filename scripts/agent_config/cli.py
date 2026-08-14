@@ -43,11 +43,28 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="HOST",
         help="只同步到指定宿主（cursor / codex / starFactory），可重复。默认三家",
     )
+    ui_parser = subparsers.add_parser("ui", help="打开本机配置面板")
+    ui_parser.add_argument(
+        "--port",
+        type=int,
+        default=8765,
+        help="仅绑定 127.0.0.1 的端口",
+    )
+    ui_parser.add_argument(
+        "--no-open",
+        action="store_true",
+        help="不调用系统浏览器",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+
+    if args.command == "ui":
+        from agent_config.ui import serve
+
+        return serve(args.port, open_browser=not args.no_open)
 
     if args.command != "sync":
         return 2

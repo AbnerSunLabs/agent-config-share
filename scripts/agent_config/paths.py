@@ -4,6 +4,9 @@ from pathlib import Path
 
 def repo_root() -> Path:
     """向上查找同时包含 inventory/ 与 scripts/ 的仓库根目录。"""
+    override = os.environ.get("AGENT_CONFIG_ROOT")
+    if override:
+        return Path(override)
     current = Path(__file__).resolve().parent
     for parent in [current, *current.parents]:
         if (parent / "inventory").is_dir() and (parent / "scripts").is_dir():

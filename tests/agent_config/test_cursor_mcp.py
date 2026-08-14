@@ -11,6 +11,7 @@ def test_apply_creates_marked_server_with_env_ref(tmp_path, monkeypatch):
             "mcp": [
                 {
                     "id": "ctx",
+                    "description": "用途",
                     "hosts": ["cursor"],
                     "transport": "stdio",
                     "command": "npx",
@@ -70,6 +71,7 @@ def test_check_reports_gap_when_env_value_empty(tmp_path, monkeypatch):
             "mcp": [
                 {
                     "id": "ctx",
+                    "description": "用途",
                     "hosts": ["cursor"],
                     "transport": "stdio",
                     "command": "npx",
@@ -92,6 +94,7 @@ def test_check_reports_gap_when_server_missing(tmp_path, monkeypatch):
             "mcp": [
                 {
                     "id": "ctx",
+                    "description": "用途",
                     "hosts": ["cursor"],
                     "transport": "stdio",
                     "command": "npx",
@@ -146,6 +149,7 @@ def test_apply_skips_write_on_invalid_json(tmp_path, monkeypatch):
             "mcp": [
                 {
                     "id": "ctx",
+                    "description": "用途",
                     "hosts": ["cursor"],
                     "transport": "stdio",
                     "command": "npx",

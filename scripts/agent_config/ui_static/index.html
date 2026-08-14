@@ -1,0 +1,1146 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>agent-config ui</title>
+    <script>
+      (function () {
+        var key = "agent-config-ui-theme";
+        var mode = localStorage.getItem(key) || "system";
+        var light = window.matchMedia("(prefers-color-scheme: light)").matches;
+        var resolved =
+          mode === "light" || (mode === "system" && light) ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", mode);
+        document.documentElement.setAttribute("data-resolved", resolved);
+      })();
+    </script>
+    <style>
+      :root {
+        --primary: #7c6cff;
+        --primary-hover: #9b8fff;
+        --on-primary: #ffffff;
+        --ink: #f4f6fb;
+        --ink-muted: #c5cde0;
+        --ink-subtle: #8b94ab;
+        --canvas: #0a0e18;
+        --surface-1: #121826;
+        --surface-2: #171f30;
+        --surface-3: #1d263a;
+        --hairline: #2a3348;
+        --hairline-strong: #3d4863;
+        --mcp: #8b7cff;
+        --hooks: #ff9f43;
+        --skills: #2ee6a6;
+        --host-cursor: #82a8ff;
+        --host-codex: #5eead4;
+        --host-starfactory: #ff7ab6;
+        --ok: #3dd68c;
+        --warn: #ffc14d;
+        --bad: #ff6b7a;
+        --radius: 10px;
+        --radius-lg: 14px;
+        --font: ui-sans-serif, "SF Pro Display", "Inter", system-ui, sans-serif;
+        --mono: ui-monospace, "SF Mono", "IBM Plex Mono", Menlo, monospace;
+        --text: 16px;
+        --glow-1: rgba(124, 108, 255, 0.18);
+        --glow-2: rgba(46, 230, 166, 0.1);
+        --glow-3: rgba(255, 159, 67, 0.08);
+        --kind-mcp: #c9c2ff;
+        --kind-mcp-bg: rgba(139, 124, 255, 0.18);
+        --kind-hooks: #ffd4a3;
+        --kind-hooks-bg: rgba(255, 159, 67, 0.18);
+        --kind-skills: #b6ffe4;
+        --kind-skills-bg: rgba(46, 230, 166, 0.16);
+        --backdrop: rgba(0, 0, 0, 0.62);
+        color-scheme: dark;
+      }
+      html[data-resolved="light"] {
+        --primary: #5b4fe0;
+        --primary-hover: #4a3fd0;
+        --on-primary: #ffffff;
+        --ink: #1a2030;
+        --ink-muted: #4a5568;
+        --ink-subtle: #6b7388;
+        --canvas: #eef1f8;
+        --surface-1: #ffffff;
+        --surface-2: #f7f8fc;
+        --surface-3: #e8ecf6;
+        --hairline: #d5dbe8;
+        --hairline-strong: #b8c0d4;
+        --mcp: #5b4fe0;
+        --hooks: #d97706;
+        --skills: #0f9f6e;
+        --host-cursor: #2563eb;
+        --host-codex: #0f766e;
+        --host-starfactory: #c02675;
+        --ok: #15803d;
+        --warn: #b45309;
+        --bad: #dc2626;
+        --glow-1: rgba(91, 79, 224, 0.16);
+        --glow-2: rgba(15, 159, 110, 0.12);
+        --glow-3: rgba(217, 119, 6, 0.12);
+        --kind-mcp: #4338ca;
+        --kind-mcp-bg: rgba(91, 79, 224, 0.12);
+        --kind-hooks: #b45309;
+        --kind-hooks-bg: rgba(217, 119, 6, 0.14);
+        --kind-skills: #047857;
+        --kind-skills-bg: rgba(15, 159, 110, 0.12);
+        --backdrop: rgba(24, 30, 48, 0.4);
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background:
+          radial-gradient(
+            1200px 480px at 12% -10%,
+            var(--glow-1),
+            transparent 55%
+          ),
+          radial-gradient(
+            900px 420px at 92% 0%,
+            var(--glow-2),
+            transparent 50%
+          ),
+          radial-gradient(
+            800px 380px at 70% 110%,
+            var(--glow-3),
+            transparent 45%
+          ),
+          var(--canvas);
+        color: var(--ink);
+        font-size: var(--text);
+        line-height: 1.5;
+        letter-spacing: -0.01em;
+      }
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: color-mix(in srgb, var(--canvas) 88%, transparent);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--hairline);
+      }
+      .top-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 28px 12px;
+      }
+      .mark {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: linear-gradient(
+          135deg,
+          var(--mcp),
+          var(--skills) 70%,
+          var(--hooks)
+        );
+        flex: none;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        flex: 1;
+      }
+      .search {
+        width: min(320px, 40vw);
+        background: var(--surface-2);
+        border: 1px solid var(--hairline);
+        color: var(--ink);
+        border-radius: var(--radius);
+        padding: 10px 14px;
+        font: 16px/1.4 var(--font);
+        outline: none;
+      }
+      .search:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--primary) 35%, transparent);
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+      }
+      .theme-seg button {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .theme-seg svg {
+        width: 16px;
+        height: 16px;
+        display: block;
+      }
+      button {
+        font: 500 16px/1.3 var(--font);
+        border-radius: var(--radius);
+        padding: 10px 16px;
+        cursor: pointer;
+        border: 1px solid var(--hairline);
+        background: var(--surface-1);
+        color: var(--ink);
+      }
+      button:hover {
+        background: var(--surface-3);
+      }
+      button:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+      button.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--on-primary);
+      }
+      button.primary:hover {
+        background: var(--primary-hover);
+        border-color: var(--primary-hover);
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        align-items: center;
+        padding: 4px 28px 16px;
+      }
+      .label {
+        font-size: 13px;
+        color: var(--ink-subtle);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .seg {
+        display: inline-flex;
+        background: var(--surface-1);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius);
+        padding: 4px;
+      }
+      .seg button {
+        border: 0;
+        background: transparent;
+        padding: 8px 14px;
+        color: var(--ink-subtle);
+        border-radius: 6px;
+      }
+      .seg button:hover {
+        background: var(--surface-3);
+        color: var(--ink);
+      }
+      .seg button.active {
+        background: var(--surface-3);
+        box-shadow: inset 0 0 0 1px var(--hairline-strong);
+        color: var(--ink);
+      }
+      .seg button[data-host="cursor"].active {
+        color: var(--host-cursor);
+      }
+      .seg button[data-host="codex"].active {
+        color: var(--host-codex);
+      }
+      .seg button[data-host="starFactory"].active {
+        color: var(--host-starfactory);
+      }
+      .seg button[data-domain="mcp"].active {
+        color: var(--mcp);
+      }
+      .seg button[data-domain="hooks"].active {
+        color: var(--hooks);
+      }
+      .seg button[data-domain="skills"].active {
+        color: var(--skills);
+      }
+      .status-bar {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 10px 28px 14px;
+        border-top: 1px solid var(--hairline);
+        min-height: 44px;
+      }
+      .summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+      }
+      .stat-idle {
+        font-size: 14px;
+        color: var(--ink-subtle);
+        padding: 6px 0;
+      }
+      .stat-chip {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 10px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--hairline);
+        background: var(--surface-1);
+        font-size: 13px;
+        line-height: 1.3;
+        color: var(--ink-muted);
+      }
+      .stat-chip.has-tip {
+        cursor: pointer;
+      }
+      .stat-name {
+        font-family: var(--mono);
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .stat-chip.host-cursor .stat-name {
+        color: var(--host-cursor);
+      }
+      .stat-chip.host-codex .stat-name {
+        color: var(--host-codex);
+      }
+      .stat-chip.host-starfactory .stat-name {
+        color: var(--host-starfactory);
+      }
+      .stat-metric {
+        color: var(--ink-subtle);
+        white-space: nowrap;
+      }
+      .stat-metric.warn {
+        color: var(--bad);
+        font-weight: 600;
+      }
+      .stat-chip.file-error {
+        border-color: color-mix(in srgb, var(--bad) 45%, var(--hairline));
+        background: rgba(255, 107, 122, 0.1);
+      }
+      #error {
+        color: var(--bad);
+        font-size: 14px;
+      }
+      main {
+        padding: 28px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 18px;
+        align-items: stretch;
+        grid-auto-rows: 1fr;
+      }
+      .card {
+        background: var(--surface-1);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-lg);
+        padding: 20px 20px 20px 22px;
+        min-height: 236px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition:
+          border-color 120ms ease,
+          background 120ms ease;
+        position: relative;
+        overflow: visible;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--hairline-strong);
+      }
+      .card-mcp {
+        background: linear-gradient(
+          180deg,
+          rgba(139, 124, 255, 0.12),
+          var(--surface-1) 42%
+        );
+      }
+      .card-mcp::before {
+        background: var(--mcp);
+      }
+      .card-hooks {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 159, 67, 0.12),
+          var(--surface-1) 42%
+        );
+      }
+      .card-hooks::before {
+        background: var(--hooks);
+      }
+      .card-skills {
+        background: linear-gradient(
+          180deg,
+          rgba(46, 230, 166, 0.12),
+          var(--surface-1) 42%
+        );
+      }
+      .card-skills::before {
+        background: var(--skills);
+      }
+      .card:hover {
+        border-color: var(--hairline-strong);
+      }
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .kind {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--ink-subtle);
+      }
+      .card-mcp .kind {
+        color: var(--kind-mcp);
+        background: var(--kind-mcp-bg);
+      }
+      .card-hooks .kind {
+        color: var(--kind-hooks);
+        background: var(--kind-hooks-bg);
+      }
+      .card-skills .kind {
+        color: var(--kind-skills);
+        background: var(--kind-skills-bg);
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink-subtle);
+        border: 1px solid var(--hairline);
+        border-radius: 999px;
+        padding: 4px 10px;
+      }
+      .status::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--ink-subtle);
+      }
+      .status.aligned {
+        color: var(--ok);
+        background: rgba(61, 214, 140, 0.12);
+        border-color: rgba(61, 214, 140, 0.28);
+      }
+      .status.aligned::before {
+        background: var(--ok);
+      }
+      .status.gap,
+      .status.file_error {
+        color: var(--bad);
+        background: rgba(255, 107, 122, 0.12);
+        border-color: rgba(255, 107, 122, 0.3);
+      }
+      .status.gap::before,
+      .status.file_error::before {
+        background: var(--bad);
+      }
+      .status.drift {
+        color: var(--warn);
+        background: rgba(255, 193, 77, 0.12);
+        border-color: rgba(255, 193, 77, 0.3);
+      }
+      .status.drift::before {
+        background: var(--warn);
+      }
+      .status.readonly {
+        color: var(--skills);
+        background: rgba(46, 230, 166, 0.1);
+        border-color: rgba(46, 230, 166, 0.25);
+      }
+      .status.readonly::before {
+        background: var(--skills);
+      }
+      .title {
+        font-family: var(--mono);
+        font-size: 16px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .desc {
+        font-size: 16px;
+        color: var(--ink-muted);
+        line-height: 1.55;
+        flex: 1 1 auto;
+        height: calc(16px * 1.55 * 2);
+        max-height: calc(16px * 1.55 * 2);
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+      }
+      .has-tip {
+        cursor: pointer;
+      }
+      .meta {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 30px;
+      }
+      .meta-hosts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .chip {
+        font-size: 13px;
+        font-family: var(--mono);
+        color: var(--ink-subtle);
+        background: var(--surface-3);
+        border: 1px solid var(--hairline);
+        border-radius: 999px;
+        padding: 4px 10px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+      .chip.path {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        box-sizing: border-box;
+      }
+      .chip.host-cursor {
+        color: var(--host-cursor);
+        border-color: rgba(130, 168, 255, 0.35);
+      }
+      .chip.host-codex {
+        color: var(--host-codex);
+        border-color: rgba(94, 234, 212, 0.35);
+      }
+      .chip.host-starfactory {
+        color: var(--host-starfactory);
+        border-color: rgba(255, 122, 182, 0.35);
+      }
+      .card-actions {
+        display: flex;
+        gap: 10px;
+        min-height: 42px;
+        align-items: center;
+        margin-top: auto;
+      }
+      .card-actions button {
+        padding: 8px 12px;
+        font-size: 16px;
+      }
+      .empty {
+        grid-column: 1 / -1;
+        color: var(--ink-subtle);
+        font-size: 16px;
+        padding: 64px 8px;
+        text-align: center;
+      }
+      dialog {
+        background: var(--surface-1);
+        color: var(--ink);
+        border: 1px solid var(--hairline-strong);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        width: min(460px, 92vw);
+      }
+      dialog::backdrop {
+        background: var(--backdrop);
+      }
+      dialog p {
+        margin: 0 0 14px;
+        font-size: 16px;
+        color: var(--ink-muted);
+        line-height: 1.55;
+      }
+      dialog p:first-child {
+        color: var(--ink);
+        font-size: 18px;
+        font-weight: 600;
+      }
+      dialog form {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+      }
+      #hover-tip {
+        position: fixed;
+        z-index: 10000;
+        max-width: min(420px, calc(100vw - 24px));
+        padding: 10px 12px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--ink);
+        background: var(--surface-1);
+        border: 1px solid var(--hairline-strong);
+        border-radius: 8px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(4px);
+        transition:
+          opacity 0.08s ease,
+          visibility 0.08s ease;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      #hover-tip.show {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+      }
+      @media (max-width: 720px) {
+        .search {
+          width: 100%;
+          order: 5;
+        }
+        .top-row {
+          flex-wrap: wrap;
+        }
+        .actions {
+          width: 100%;
+        }
+        .actions button {
+          flex: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="top-row">
+        <span class="mark" aria-hidden="true"></span>
+        <h1>agent-config ui</h1>
+        <input
+          id="q"
+          class="search"
+          type="search"
+          placeholder="搜索 id / 用途 / 路径"
+        />
+        <div class="actions">
+          <button type="button" class="primary" id="btn-check">检查差异</button>
+          <button type="button" id="btn-apply">写入同步</button>
+        </div>
+        <div class="seg theme-seg" id="theme-seg">
+          <button type="button" data-theme-choice="light" aria-label="浅色">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path
+                d="M12 3v2M12 19v2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M3 12h2M19 12h2M5.2 18.8l1.4-1.4M17.4 6.6l1.4-1.4"
+              />
+            </svg>
+          </button>
+          <button type="button" data-theme-choice="dark" aria-label="深色">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            data-theme-choice="system"
+            aria-label="系统适配"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="4" width="18" height="13" rx="2" />
+              <path d="M8 21h8M12 17v4" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="label">宿主</span>
+        <div class="seg">
+          <button type="button" data-host="all" class="active">全部</button>
+          <button type="button" data-host="cursor">Cursor</button>
+          <button type="button" data-host="codex">Codex</button>
+          <button type="button" data-host="starFactory">starFactory</button>
+        </div>
+        <span class="label">域</span>
+        <div class="seg">
+          <button type="button" data-domain="all" class="active">全部</button>
+          <button type="button" data-domain="skills">Skills</button>
+          <button type="button" data-domain="mcp">MCP</button>
+          <button type="button" data-domain="hooks">Hooks</button>
+        </div>
+      </div>
+      <div class="status-bar">
+        <div id="summary" class="summary"></div>
+        <span id="error"></span>
+      </div>
+    </header>
+    <main id="grid"></main>
+    <div id="hover-tip"></div>
+    <dialog id="confirm">
+      <p>确认写入同步</p>
+      <p>
+        将备份后合并写入所选宿主的 MCP / Hooks。默认不删除清单外条目（不做
+        prune）。
+      </p>
+      <p id="confirm-hosts"></p>
+      <form method="dialog">
+        <button value="cancel">取消</button>
+        <button class="primary" value="ok">确认写入</button>
+      </form>
+    </dialog>
+    <script>
+      const HOSTS = ["cursor", "codex", "starFactory"];
+      const STATUS_LABEL = {
+        aligned: "已对齐",
+        gap: "缺失",
+        drift: "不一致",
+        file_error: "目标文件异常",
+        readonly: "只读",
+        unknown: "未检查",
+      };
+      let catalog = { skills: [], mcp: [], hooks: [] };
+      let selectedHosts = [...HOSTS];
+      let domain = "all";
+
+      const $ = (id) => document.getElementById(id);
+      const q = () => $("q").value.trim().toLowerCase();
+      const hoverTip = $("hover-tip");
+
+      function isTruncated(el) {
+        const style = getComputedStyle(el);
+        const clamped =
+          style.webkitLineClamp && style.webkitLineClamp !== "none";
+        if (clamped) {
+          const probe = el.cloneNode(true);
+          probe.removeAttribute("class");
+          probe.style.cssText =
+            "position:absolute;visibility:hidden;display:block;height:auto;" +
+            "max-height:none;-webkit-line-clamp:unset;line-clamp:unset;" +
+            "overflow:visible;width:" +
+            el.clientWidth +
+            "px";
+          el.parentNode.appendChild(probe);
+          const overflow = probe.scrollHeight > el.clientHeight + 1;
+          probe.remove();
+          return overflow;
+        }
+        return el.scrollWidth > el.clientWidth + 1;
+      }
+
+      function placeHoverTip(event) {
+        const pad = 12;
+        const rect = hoverTip.getBoundingClientRect();
+        let x = event.clientX + 14;
+        let y = event.clientY + 16;
+        if (x + rect.width > window.innerWidth - pad) {
+          x = Math.max(pad, event.clientX - rect.width - 12);
+        }
+        if (y + rect.height > window.innerHeight - pad) {
+          y = Math.max(pad, event.clientY - rect.height - 12);
+        }
+        hoverTip.style.left = x + "px";
+        hoverTip.style.top = y + "px";
+      }
+
+      function hideHoverTip() {
+        hoverTip.classList.remove("show");
+        hoverTip.textContent = "";
+      }
+
+      function bindFullTip(el, text, force) {
+        if (!text) return;
+        el.classList.add("has-tip");
+        el.addEventListener("mouseenter", (event) => {
+          if (!force && !isTruncated(el)) return;
+          hoverTip.textContent = text;
+          hoverTip.classList.add("show");
+          placeHoverTip(event);
+        });
+        el.addEventListener("mousemove", (event) => {
+          if (!hoverTip.classList.contains("show")) return;
+          placeHoverTip(event);
+        });
+        el.addEventListener("mouseleave", hideHoverTip);
+      }
+
+      const STATUS_RANK = {
+        file_error: 4,
+        gap: 3,
+        drift: 2,
+        aligned: 1,
+        unknown: 0,
+        readonly: 0,
+      };
+
+      function cardStatus(card) {
+        if (card.status === "readonly") return "readonly";
+        const states = selectedHosts
+          .filter((h) => (card.hosts || []).includes(h))
+          .map((h) => (card.per_host && card.per_host[h]) || "unknown");
+        if (!states.length) return "unknown";
+        return states.reduce((best, cur) =>
+          (STATUS_RANK[cur] || 0) > (STATUS_RANK[best] || 0) ? cur : best,
+        );
+      }
+
+      function matchesSearch(card) {
+        const needle = q();
+        if (!needle) return true;
+        const blob = [
+          card.id,
+          card.description || "",
+          card.path || "",
+          card.intent || "",
+          (card.hosts || []).join(" "),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return blob.includes(needle);
+      }
+
+      function hostOk(card) {
+        return (card.hosts || []).some((h) => selectedHosts.includes(h));
+      }
+
+      function syncButtons() {
+        const disable = domain === "skills";
+        $("btn-check").disabled = disable;
+        $("btn-apply").disabled = disable;
+      }
+
+      function render() {
+        syncButtons();
+        const grid = $("grid");
+        grid.innerHTML = "";
+        const groups = [];
+        if (domain === "all" || domain === "mcp")
+          groups.push(["MCP", catalog.mcp || []]);
+        if (domain === "all" || domain === "hooks")
+          groups.push(["Hooks", catalog.hooks || []]);
+        if (domain === "all" || domain === "skills")
+          groups.push(["Skills", catalog.skills || []]);
+        let shown = 0;
+        for (const [kind, list] of groups) {
+          for (const card of list) {
+            if (!hostOk(card) || !matchesSearch(card)) continue;
+            shown += 1;
+            const el = document.createElement("article");
+            el.className = "card card-" + kind.toLowerCase();
+            const status = cardStatus(card);
+            el.innerHTML = `
+            <div class="card-top">
+              <div class="kind"></div>
+              <div class="status ${status}"></div>
+            </div>
+            <div class="title"></div>
+            <div class="desc"></div>
+            <div class="meta"></div>
+            <div class="card-actions"></div>`;
+            el.querySelector(".kind").textContent = kind;
+            const descEl = el.querySelector(".desc");
+            const desc = card.description || "";
+            descEl.textContent = desc;
+            bindFullTip(descEl, desc);
+            const titleEl = el.querySelector(".title");
+            titleEl.textContent = card.id;
+            bindFullTip(titleEl, card.id);
+            const meta = el.querySelector(".meta");
+            if (card.path) {
+              const pathChip = document.createElement("span");
+              pathChip.className = "chip path";
+              pathChip.textContent = card.path;
+              bindFullTip(pathChip, card.path);
+              meta.append(pathChip);
+            }
+            const hostRow = document.createElement("div");
+            hostRow.className = "meta-hosts";
+            const extras = [];
+            if (card.transport) extras.push(card.transport);
+            if (card.intent) extras.push(card.intent);
+            extras.forEach((text) => {
+              const chip = document.createElement("span");
+              chip.className = "chip";
+              chip.textContent = text;
+              hostRow.append(chip);
+            });
+            (card.hosts || []).forEach((host) => {
+              const chip = document.createElement("span");
+              chip.className = "chip host-" + host.toLowerCase();
+              chip.textContent = host;
+              hostRow.append(chip);
+            });
+            if (hostRow.childElementCount) meta.append(hostRow);
+            el.querySelector(".status").textContent =
+              STATUS_LABEL[status] || status;
+            if (kind === "Skills") {
+              const open = document.createElement("button");
+              open.textContent = "打开目录";
+              open.onclick = () => openSkill(card.path);
+              const copy = document.createElement("button");
+              copy.textContent = "复制路径";
+              copy.onclick = () => navigator.clipboard.writeText(card.path);
+              el.querySelector(".card-actions").append(open, copy);
+            }
+            grid.append(el);
+          }
+        }
+        if (!shown) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "没有匹配的条目";
+          grid.append(empty);
+        }
+      }
+
+      function setError(msg) {
+        $("error").textContent = msg || "";
+      }
+
+      function metric(label, count) {
+        const el = document.createElement("span");
+        el.className = "stat-metric" + (count > 0 ? " warn" : "");
+        el.textContent = label + " " + count;
+        return el;
+      }
+
+      function renderSummary() {
+        const box = $("summary");
+        box.replaceChildren();
+        const s = catalog.summary;
+        if (!s) {
+          const idle = document.createElement("span");
+          idle.className = "stat-idle";
+          idle.textContent = "尚未检查 · 点「检查差异」对照清单";
+          box.append(idle);
+          return;
+        }
+        selectedHosts.forEach((h) => {
+          const row = s[h] || {};
+          const chip = document.createElement("div");
+          chip.className = "stat-chip host-" + h.toLowerCase();
+          const name = document.createElement("span");
+          name.className = "stat-name";
+          name.textContent = h;
+          chip.append(name);
+          if (row.file_error) {
+            chip.classList.add("file-error");
+            const err = document.createElement("span");
+            err.className = "stat-metric warn";
+            err.textContent = "目标文件异常";
+            chip.append(err);
+            bindFullTip(chip, h + " 目标文件异常", true);
+          } else {
+            const mcp = row.mcp_gaps || 0;
+            const hooks = row.hooks_gaps || 0;
+            chip.append(metric("MCP", mcp), metric("Hooks", hooks));
+            bindFullTip(
+              chip,
+              h + "\nMCP 缺失 " + mcp + "\nHooks 缺失 " + hooks,
+              true,
+            );
+          }
+          box.append(chip);
+        });
+      }
+
+      async function api(path, body) {
+        const res = await fetch(path, {
+          method: body === undefined ? "GET" : "POST",
+          headers:
+            body === undefined ? {} : { "Content-Type": "application/json" },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { error: "bad_json", message: text };
+        }
+        if (!res.ok)
+          throw Object.assign(
+            new Error(data.message || data.error || res.status),
+            { data, status: res.status },
+          );
+        return data;
+      }
+
+      function payload() {
+        const only = domain === "mcp" || domain === "hooks" ? domain : null;
+        return { hosts: selectedHosts, only };
+      }
+
+      async function loadCatalog() {
+        try {
+          catalog = await api("/api/catalog");
+          setError("");
+          renderSummary();
+          render();
+        } catch (e) {
+          setError((e.data && e.data.message) || e.message);
+          if (e.data && e.data.error === "schema") {
+            $("btn-apply").disabled = true;
+          }
+        }
+      }
+
+      $("btn-check").onclick = async () => {
+        try {
+          catalog = await api("/api/check", payload());
+          setError("");
+          renderSummary();
+          render();
+        } catch (e) {
+          setError((e.data && e.data.message) || e.message);
+        }
+      };
+
+      $("btn-apply").onclick = () => {
+        $("confirm-hosts").textContent = "宿主: " + selectedHosts.join(", ");
+        const bad = selectedHosts.some(
+          (h) =>
+            catalog.summary &&
+            catalog.summary[h] &&
+            catalog.summary[h].file_error,
+        );
+        $("confirm-hosts").textContent += bad
+          ? "。所选宿主存在目标文件异常，确认后仍按现有 apply 语义尝试写入。"
+          : "";
+        $("confirm").showModal();
+      };
+
+      $("confirm").addEventListener("close", async () => {
+        if ($("confirm").returnValue !== "ok") return;
+        try {
+          catalog = await api("/api/apply", { ...payload(), confirm: true });
+          setError("");
+          renderSummary();
+          render();
+        } catch (e) {
+          setError((e.data && e.data.message) || e.message);
+        }
+      });
+
+      async function openSkill(path) {
+        try {
+          await api("/api/skills/open", { path });
+          setError("");
+        } catch (e) {
+          setError((e.data && e.data.message) || e.message);
+        }
+      }
+
+      document.querySelectorAll("[data-host]").forEach((btn) => {
+        btn.onclick = () => {
+          document
+            .querySelectorAll("[data-host]")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          selectedHosts =
+            btn.dataset.host === "all" ? [...HOSTS] : [btn.dataset.host];
+          renderSummary();
+          render();
+        };
+      });
+      document.querySelectorAll("[data-domain]").forEach((btn) => {
+        btn.onclick = () => {
+          document
+            .querySelectorAll("[data-domain]")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          domain = btn.dataset.domain;
+          render();
+        };
+      });
+      $("q").addEventListener("input", render);
+
+      const THEME_KEY = "agent-config-ui-theme";
+      const themeMql = window.matchMedia("(prefers-color-scheme: light)");
+
+      function resolveTheme(mode) {
+        if (mode === "light") return "light";
+        if (mode === "dark") return "dark";
+        return themeMql.matches ? "light" : "dark";
+      }
+
+      function applyTheme(mode) {
+        const next = ["light", "dark", "system"].includes(mode)
+          ? mode
+          : "system";
+        localStorage.setItem(THEME_KEY, next);
+        document.documentElement.setAttribute("data-theme", next);
+        document.documentElement.setAttribute(
+          "data-resolved",
+          resolveTheme(next),
+        );
+        document.querySelectorAll("[data-theme-choice]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.themeChoice === next);
+        });
+      }
+
+      const THEME_LABEL = {
+        light: "浅色",
+        dark: "深色",
+        system: "系统适配",
+      };
+      document.querySelectorAll("[data-theme-choice]").forEach((btn) => {
+        btn.onclick = () => applyTheme(btn.dataset.themeChoice);
+        bindFullTip(btn, THEME_LABEL[btn.dataset.themeChoice], true);
+      });
+      themeMql.addEventListener("change", () => {
+        if ((localStorage.getItem(THEME_KEY) || "system") === "system") {
+          applyTheme("system");
+        }
+      });
+      applyTheme(localStorage.getItem(THEME_KEY) || "system");
+
+      loadCatalog();
+    </script>
+  </body>
+</html>

@@ -71,6 +71,7 @@ def test_gaps_exit_1(tmp_path, monkeypatch):
     (inv / "mcp.yaml").write_text(
         "mcp:\n"
         "  - id: srv\n"
+        "    description: 用途\n"
         "    hosts: [cursor]\n"
         "    transport: stdio\n"
         "    command: echo\n"
@@ -90,6 +91,7 @@ def test_apply_backups_existing_files(tmp_path, monkeypatch):
     (inv / "mcp.yaml").write_text(
         "mcp:\n"
         "  - id: srv\n"
+        "    description: 用途\n"
         "    hosts: [cursor]\n"
         "    transport: stdio\n"
         "    command: echo\n"
@@ -128,6 +130,7 @@ def test_sync_check_mcp_aggregates_three_hosts(tmp_path, monkeypatch):
             "mcp": [
                 {
                     "id": "x",
+                    "description": "用途",
                     "hosts": ["starFactory"],
                     "transport": "stdio",
                     "command": "echo",
@@ -160,6 +163,7 @@ def test_host_cursor_apply_does_not_write_codex(tmp_path, monkeypatch):
     (inv / "mcp.yaml").write_text(
         "mcp:\n"
         "  - id: srv\n"
+        "    description: 用途\n"
         "    hosts: [cursor, codex]\n"
         "    transport: stdio\n"
         "    command: echo\n"
