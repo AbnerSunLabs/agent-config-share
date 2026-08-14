@@ -4,6 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>agent-config ui</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script>
       (function () {
         var key = "agent-config-ui-theme";
@@ -17,77 +23,93 @@
     </script>
     <style>
       :root {
-        --primary: #7c6cff;
-        --primary-hover: #9b8fff;
-        --on-primary: #ffffff;
-        --ink: #f4f6fb;
-        --ink-muted: #c5cde0;
-        --ink-subtle: #8b94ab;
-        --canvas: #0a0e18;
-        --surface-1: #121826;
-        --surface-2: #171f30;
-        --surface-3: #1d263a;
-        --hairline: #2a3348;
-        --hairline-strong: #3d4863;
-        --mcp: #8b7cff;
-        --hooks: #ff9f43;
-        --skills: #2ee6a6;
-        --host-cursor: #82a8ff;
-        --host-codex: #5eead4;
-        --host-starfactory: #ff7ab6;
-        --ok: #3dd68c;
-        --warn: #ffc14d;
-        --bad: #ff6b7a;
-        --radius: 10px;
-        --radius-lg: 14px;
-        --font: ui-sans-serif, "SF Pro Display", "Inter", system-ui, sans-serif;
-        --mono: ui-monospace, "SF Mono", "IBM Plex Mono", Menlo, monospace;
+        /* —— skillshare clean 色板（浅色默认）—— */
+        --color-paper: #f7f6f3;
+        --color-paper-warm: #ffffff;
+        --color-pencil: #141312;
+        --color-pencil-light: #5a5750;
+        --color-muted: #e2dfd8;
+        --color-muted-dark: #9e9b94;
+        --color-accent: #dc4538;
+        --color-blue: #2d5da1;
+        --color-success: #2e8b57;
+        --color-success-light: #e8f5ed;
+        --color-warning: #d4870e;
+        --color-warning-light: #fef7e8;
+        --color-danger: #c0392b;
+        --color-danger-light: #fdecea;
+        --color-info-light: #e8eff8;
+        --color-accent-light: rgba(220, 69, 56, 0.1);
+        --color-surface: #ffffff;
+
+        /* 语义别名：现有组件变量 → skillshare 色板 */
+        --primary: var(--color-pencil);
+        --primary-hover: var(--color-pencil-light);
+        --on-primary: var(--color-paper);
+        --ink: var(--color-pencil);
+        --ink-muted: var(--color-pencil-light);
+        --ink-subtle: var(--color-muted-dark);
+        --canvas: var(--color-paper);
+        --surface-1: var(--color-surface);
+        --surface-2: var(--color-paper-warm);
+        --surface-3: var(--color-muted);
+        --hairline: var(--color-muted);
+        --hairline-strong: var(--color-muted-dark);
+        --mcp: var(--color-blue);
+        --hooks: var(--color-accent);
+        --skills: var(--color-success);
+        --host-cursor: var(--color-blue);
+        --host-codex: var(--color-success);
+        --host-starfactory: var(--color-accent);
+        --ok: var(--color-success);
+        --warn: var(--color-warning);
+        --bad: var(--color-danger);
+        --kind-mcp: var(--color-blue);
+        --kind-mcp-bg: var(--color-info-light);
+        --kind-hooks: var(--color-accent);
+        --kind-hooks-bg: var(--color-accent-light);
+        --kind-skills: var(--color-success);
+        --kind-skills-bg: var(--color-success-light);
+        --backdrop: rgba(0, 0, 0, 0.35);
+
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius: var(--radius-md);
+        --radius-btn: 9999px;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+        --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+        --font: "DM Sans", ui-sans-serif, system-ui, -apple-system,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        --mono: "SFMono-Regular", Menlo, Consolas, "Liberation Mono",
+          monospace;
         --text: 16px;
-        --glow-1: rgba(124, 108, 255, 0.18);
-        --glow-2: rgba(46, 230, 166, 0.1);
-        --glow-3: rgba(255, 159, 67, 0.08);
-        --kind-mcp: #c9c2ff;
-        --kind-mcp-bg: rgba(139, 124, 255, 0.18);
-        --kind-hooks: #ffd4a3;
-        --kind-hooks-bg: rgba(255, 159, 67, 0.18);
-        --kind-skills: #b6ffe4;
-        --kind-skills-bg: rgba(46, 230, 166, 0.16);
-        --backdrop: rgba(0, 0, 0, 0.62);
-        color-scheme: dark;
-      }
-      html[data-resolved="light"] {
-        --primary: #5b4fe0;
-        --primary-hover: #4a3fd0;
-        --on-primary: #ffffff;
-        --ink: #1a2030;
-        --ink-muted: #4a5568;
-        --ink-subtle: #6b7388;
-        --canvas: #eef1f8;
-        --surface-1: #ffffff;
-        --surface-2: #f7f8fc;
-        --surface-3: #e8ecf6;
-        --hairline: #d5dbe8;
-        --hairline-strong: #b8c0d4;
-        --mcp: #5b4fe0;
-        --hooks: #d97706;
-        --skills: #0f9f6e;
-        --host-cursor: #2563eb;
-        --host-codex: #0f766e;
-        --host-starfactory: #c02675;
-        --ok: #15803d;
-        --warn: #b45309;
-        --bad: #dc2626;
-        --glow-1: rgba(91, 79, 224, 0.16);
-        --glow-2: rgba(15, 159, 110, 0.12);
-        --glow-3: rgba(217, 119, 6, 0.12);
-        --kind-mcp: #4338ca;
-        --kind-mcp-bg: rgba(91, 79, 224, 0.12);
-        --kind-hooks: #b45309;
-        --kind-hooks-bg: rgba(217, 119, 6, 0.14);
-        --kind-skills: #047857;
-        --kind-skills-bg: rgba(15, 159, 110, 0.12);
-        --backdrop: rgba(24, 30, 48, 0.4);
         color-scheme: light;
+      }
+      html[data-resolved="dark"] {
+        --color-paper: #111110;
+        --color-paper-warm: #1c1b19;
+        --color-pencil: #ededeb;
+        --color-pencil-light: #a3a09a;
+        --color-muted: #2e2d2a;
+        --color-muted-dark: #706c66;
+        --color-accent: #dc4538;
+        --color-blue: #7aa5d6;
+        --color-success: #5cc98a;
+        --color-success-light: rgba(92, 201, 138, 0.15);
+        --color-warning: #f0b840;
+        --color-warning-light: rgba(240, 184, 64, 0.15);
+        --color-danger: #e8564a;
+        --color-danger-light: rgba(232, 86, 74, 0.15);
+        --color-info-light: rgba(122, 165, 214, 0.15);
+        --color-accent-light: rgba(232, 86, 74, 0.1);
+        --color-surface: #1c1b19;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
+        color-scheme: dark;
       }
       * {
         box-sizing: border-box;
@@ -99,23 +121,7 @@
       body {
         margin: 0;
         font-family: var(--font);
-        background:
-          radial-gradient(
-            1200px 480px at 12% -10%,
-            var(--glow-1),
-            transparent 55%
-          ),
-          radial-gradient(
-            900px 420px at 92% 0%,
-            var(--glow-2),
-            transparent 50%
-          ),
-          radial-gradient(
-            800px 380px at 70% 110%,
-            var(--glow-3),
-            transparent 45%
-          ),
-          var(--canvas);
+        background: var(--canvas);
         color: var(--ink);
         font-size: var(--text);
         line-height: 1.5;
@@ -138,19 +144,14 @@
       .mark {
         width: 22px;
         height: 22px;
-        border-radius: 6px;
-        background: linear-gradient(
-          135deg,
-          var(--mcp),
-          var(--skills) 70%,
-          var(--hooks)
-        );
+        border-radius: var(--radius-sm);
+        background: var(--color-accent);
         flex: none;
       }
       h1 {
         margin: 0;
         font-size: 18px;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: -0.03em;
         flex: 1;
       }
@@ -174,32 +175,38 @@
         gap: 12px;
       }
       .theme-seg button {
-        width: 38px;
-        height: 38px;
+        width: 42px;
+        height: 42px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
       }
       .theme-seg svg {
-        width: 16px;
-        height: 16px;
+        width: 22px;
+        height: 22px;
         display: block;
       }
       button {
         font: 500 16px/1.3 var(--font);
-        border-radius: var(--radius);
-        padding: 10px 16px;
+        border-radius: var(--radius-btn);
+        padding: 9px 18px;
         cursor: pointer;
-        border: 1px solid var(--hairline);
-        background: var(--surface-1);
+        border: 2px solid var(--hairline-strong);
+        background: transparent;
         color: var(--ink);
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
       }
       button:hover {
-        background: var(--surface-3);
+        background: color-mix(in srgb, var(--hairline) 30%, transparent);
+        border-color: var(--ink);
+        box-shadow: var(--shadow-sm);
       }
       button:focus-visible {
-        outline: 2px solid var(--primary);
+        outline: 2px solid var(--ink);
         outline-offset: 2px;
       }
       button.primary {
@@ -212,7 +219,7 @@
         border-color: var(--primary-hover);
       }
       button:disabled {
-        opacity: 0.4;
+        opacity: 0.5;
         cursor: not-allowed;
       }
       .toolbar {
@@ -230,26 +237,27 @@
       }
       .seg {
         display: inline-flex;
-        background: var(--surface-1);
+        background: var(--hairline);
         border: 1px solid var(--hairline);
-        border-radius: var(--radius);
-        padding: 4px;
+        border-radius: var(--radius-btn);
+        padding: 3px;
       }
       .seg button {
         border: 0;
         background: transparent;
         padding: 8px 14px;
         color: var(--ink-subtle);
-        border-radius: 6px;
+        border-radius: var(--radius-btn);
       }
       .seg button:hover {
-        background: var(--surface-3);
+        background: color-mix(in srgb, var(--surface-1) 60%, transparent);
         color: var(--ink);
       }
       .seg button.active {
-        background: var(--surface-3);
-        box-shadow: inset 0 0 0 1px var(--hairline-strong);
+        background: var(--surface-1);
+        box-shadow: var(--shadow-sm);
         color: var(--ink);
+        font-weight: 600;
       }
       .seg button[data-host="cursor"].active {
         color: var(--host-cursor);
@@ -329,7 +337,7 @@
       }
       .stat-chip.file-error {
         border-color: color-mix(in srgb, var(--bad) 45%, var(--hairline));
-        background: rgba(255, 107, 122, 0.1);
+        background: var(--color-danger-light);
       }
       #error {
         color: var(--bad);
@@ -346,8 +354,9 @@
       .card {
         background: var(--surface-1);
         border: 1px solid var(--hairline);
-        border-radius: var(--radius-lg);
-        padding: 20px 20px 20px 22px;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        padding: 20px;
         min-height: 236px;
         height: 100%;
         display: flex;
@@ -355,51 +364,15 @@
         gap: 12px;
         transition:
           border-color 120ms ease,
-          background 120ms ease;
+          box-shadow 120ms ease,
+          transform 120ms ease;
         position: relative;
         overflow: visible;
       }
-      .card::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3px;
-        background: var(--hairline-strong);
-      }
-      .card-mcp {
-        background: linear-gradient(
-          180deg,
-          rgba(139, 124, 255, 0.12),
-          var(--surface-1) 42%
-        );
-      }
-      .card-mcp::before {
-        background: var(--mcp);
-      }
-      .card-hooks {
-        background: linear-gradient(
-          180deg,
-          rgba(255, 159, 67, 0.12),
-          var(--surface-1) 42%
-        );
-      }
-      .card-hooks::before {
-        background: var(--hooks);
-      }
-      .card-skills {
-        background: linear-gradient(
-          180deg,
-          rgba(46, 230, 166, 0.12),
-          var(--surface-1) 42%
-        );
-      }
-      .card-skills::before {
-        background: var(--skills);
-      }
       .card:hover {
         border-color: var(--hairline-strong);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
       }
       .card-top {
         display: flex;
@@ -413,8 +386,8 @@
         letter-spacing: 0.08em;
         text-transform: uppercase;
         padding: 4px 10px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
+        border-radius: var(--radius-sm);
+        background: var(--surface-3);
         color: var(--ink-subtle);
       }
       .card-mcp .kind {
@@ -449,8 +422,8 @@
       }
       .status.aligned {
         color: var(--ok);
-        background: rgba(61, 214, 140, 0.12);
-        border-color: rgba(61, 214, 140, 0.28);
+        background: var(--color-success-light);
+        border-color: color-mix(in srgb, var(--ok) 30%, transparent);
       }
       .status.aligned::before {
         background: var(--ok);
@@ -458,8 +431,8 @@
       .status.gap,
       .status.file_error {
         color: var(--bad);
-        background: rgba(255, 107, 122, 0.12);
-        border-color: rgba(255, 107, 122, 0.3);
+        background: var(--color-danger-light);
+        border-color: color-mix(in srgb, var(--bad) 30%, transparent);
       }
       .status.gap::before,
       .status.file_error::before {
@@ -467,24 +440,24 @@
       }
       .status.drift {
         color: var(--warn);
-        background: rgba(255, 193, 77, 0.12);
-        border-color: rgba(255, 193, 77, 0.3);
+        background: var(--color-warning-light);
+        border-color: color-mix(in srgb, var(--warn) 30%, transparent);
       }
       .status.drift::before {
         background: var(--warn);
       }
       .status.readonly {
         color: var(--skills);
-        background: rgba(46, 230, 166, 0.1);
-        border-color: rgba(46, 230, 166, 0.25);
+        background: var(--color-success-light);
+        border-color: color-mix(in srgb, var(--skills) 30%, transparent);
       }
       .status.readonly::before {
         background: var(--skills);
       }
       .title {
-        font-family: var(--mono);
+        font-family: var(--font);
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -538,15 +511,15 @@
       }
       .chip.host-cursor {
         color: var(--host-cursor);
-        border-color: rgba(130, 168, 255, 0.35);
+        border-color: color-mix(in srgb, var(--host-cursor) 35%, transparent);
       }
       .chip.host-codex {
         color: var(--host-codex);
-        border-color: rgba(94, 234, 212, 0.35);
+        border-color: color-mix(in srgb, var(--host-codex) 35%, transparent);
       }
       .chip.host-starfactory {
         color: var(--host-starfactory);
-        border-color: rgba(255, 122, 182, 0.35);
+        border-color: color-mix(in srgb, var(--host-starfactory) 35%, transparent);
       }
       .card-actions {
         display: flex;
@@ -571,8 +544,12 @@
         color: var(--ink);
         border: 1px solid var(--hairline-strong);
         border-radius: var(--radius-lg);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15);
         padding: 28px;
         width: min(460px, 92vw);
+      }
+      html[data-resolved="dark"] dialog {
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
       }
       dialog::backdrop {
         background: var(--backdrop);
@@ -604,8 +581,8 @@
         color: var(--ink);
         background: var(--surface-1);
         border: 1px solid var(--hairline-strong);
-        border-radius: 8px;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
         pointer-events: none;
         opacity: 0;
         visibility: hidden;
