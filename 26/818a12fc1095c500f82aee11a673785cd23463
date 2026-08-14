@@ -1,0 +1,37 @@
+scripts/agent_config/ui_static/index.html
+  s_d589df44c612e8::t_7bbbdb0efd2eb9 26-87,91-98,100-105,107-112
+  s_d589df44c612e8::t_f6ba828251bc43 147-148,154
+  s_d589df44c612e8::t_ee32acbc1a8c92 458,460
+  s_d589df44c612e8::t_c83656d3c3e2ac 357-359,367-368,374-375
+  s_d589df44c612e8::t_0f613a53c09c14 584-585
+  s_d589df44c612e8::t_d2db83574cb996 124
+  s_d589df44c612e8::t_1507a06cbdee47 192-193,195-196,198-201,204-206,209,222
+  s_d589df44c612e8::t_da0a51da5d9ce6 178-179,186-187
+  s_d589df44c612e8::t_fc845c014a78bb 340
+  s_d589df44c612e8::t_e654579ff68130 389-390
+  s_d589df44c612e8::t_722f22885c9775 547,551-552
+  s_d589df44c612e8::t_840e313f73b690 240,242-243,250,253,257-258,260
+  s_d589df44c612e8::t_bb923c89216e98 7-12
+  s_d589df44c612e8::t_51432b0d1531f8 99
+  s_d589df44c612e8::t_a63ab497b8fee5 425-426,434-435,443-444,451-452
+  s_d589df44c612e8::t_ad8da38979a801 514,518,522
+  s_d589df44c612e8::t_fa1b4ae6c90da6 106
+  s_d589df44c612e8::t_accc0ec25d4ec7 113
+  s_d589df44c612e8::t_0b5057f81c5992 553
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "26818a12fc1095c500f82aee11a673785cd23463",
+  "prompts": {},
+  "sessions": {
+    "s_d589df44c612e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c3ac814e-5a9f-4221-9a0f-00c4ff6e84ef",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "AbnerSun <sunyujiejohn@sina.com>"
+    }
+  }
+}
