@@ -81,10 +81,10 @@
         --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.06);
         --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
 
-        --font: "DM Sans", ui-sans-serif, system-ui, -apple-system,
-          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-        --mono: "SFMono-Regular", Menlo, Consolas, "Liberation Mono",
-          monospace;
+        --font:
+          "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+          "PingFang SC", "Microsoft YaHei", sans-serif;
+        --mono: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
         --text: 16px;
         color-scheme: light;
       }
@@ -170,9 +170,133 @@
         box-shadow: 0 0 0 3px
           color-mix(in srgb, var(--primary) 35%, transparent);
       }
+      .filter {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .select-wrap {
+        position: relative;
+        display: inline-flex;
+      }
+      .select-native {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      button.select-trigger {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 148px;
+        height: 42px;
+        padding: 0 12px 0 14px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius);
+        background: var(--surface-1);
+        color: var(--ink);
+        font: 500 15px/1.3 var(--font);
+        box-shadow: var(--shadow-sm);
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      button.select-trigger:hover {
+        background: var(--surface-1);
+        border-color: var(--hairline-strong);
+        box-shadow: var(--shadow-md);
+      }
+      button.select-trigger:focus-visible,
+      button.select-trigger[aria-expanded="true"] {
+        outline: none;
+        border-color: var(--ink);
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--primary) 18%, transparent);
+      }
+      .select-value {
+        flex: 1;
+        text-align: left;
+        min-width: 0;
+      }
+      .select-chevron {
+        width: 16px;
+        height: 16px;
+        flex: none;
+        color: var(--ink-subtle);
+        transition: transform 0.15s ease;
+      }
+      button.select-trigger[aria-expanded="true"] .select-chevron {
+        transform: rotate(180deg);
+        color: var(--ink);
+      }
+      .select-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        z-index: 40;
+        min-width: 100%;
+        margin: 0;
+        padding: 6px;
+        list-style: none;
+        background: var(--surface-1);
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        display: none;
+      }
+      .select-menu.open {
+        display: block;
+      }
+      button.select-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        margin: 0;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--ink);
+        font: 500 15px/1.3 var(--font);
+        text-align: left;
+        box-shadow: none;
+      }
+      button.select-option:hover {
+        background: var(--surface-3);
+        border-color: transparent;
+        box-shadow: none;
+      }
+      button.select-option[aria-selected="true"] {
+        background: var(--surface-3);
+        font-weight: 600;
+      }
+      button.select-option:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: -2px;
+      }
+      .select-check {
+        width: 14px;
+        height: 14px;
+        flex: none;
+        color: var(--ink);
+        opacity: 0;
+      }
+      button.select-option[aria-selected="true"] .select-check {
+        opacity: 1;
+      }
       .actions {
         display: flex;
         gap: 12px;
+        margin-left: auto;
       }
       .theme-seg button {
         width: 42px;
@@ -230,10 +354,15 @@
         padding: 4px 28px 16px;
       }
       .label {
+        flex: none;
         font-size: 13px;
-        color: var(--ink-subtle);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: 0;
+        color: var(--ink-muted);
+        background: var(--surface-3);
+        border-radius: 6px;
+        padding: 6px 10px;
       }
       .seg {
         display: inline-flex;
@@ -258,24 +387,6 @@
         box-shadow: var(--shadow-sm);
         color: var(--ink);
         font-weight: 600;
-      }
-      .seg button[data-host="cursor"].active {
-        color: var(--host-cursor);
-      }
-      .seg button[data-host="codex"].active {
-        color: var(--host-codex);
-      }
-      .seg button[data-host="starFactory"].active {
-        color: var(--host-starfactory);
-      }
-      .seg button[data-domain="mcp"].active {
-        color: var(--mcp);
-      }
-      .seg button[data-domain="hooks"].active {
-        color: var(--hooks);
-      }
-      .seg button[data-domain="skills"].active {
-        color: var(--skills);
       }
       .status-bar {
         display: flex;
@@ -519,7 +630,11 @@
       }
       .chip.host-starfactory {
         color: var(--host-starfactory);
-        border-color: color-mix(in srgb, var(--host-starfactory) 35%, transparent);
+        border-color: color-mix(
+          in srgb,
+          var(--host-starfactory) 35%,
+          transparent
+        );
       }
       .card-actions {
         display: flex;
@@ -619,17 +734,13 @@
     <header class="top">
       <div class="top-row">
         <span class="mark" aria-hidden="true"></span>
-        <h1>agent-config ui</h1>
+        <h1>agentLoom</h1>
         <input
           id="q"
           class="search"
           type="search"
           placeholder="搜索 id / 用途 / 路径"
         />
-        <div class="actions">
-          <button type="button" class="primary" id="btn-check">检查差异</button>
-          <button type="button" id="btn-apply">写入同步</button>
-        </div>
         <div class="seg theme-seg" id="theme-seg">
           <button type="button" data-theme-choice="light" aria-label="浅色">
             <svg
@@ -677,19 +788,31 @@
         </div>
       </div>
       <div class="toolbar">
-        <span class="label">宿主</span>
-        <div class="seg">
-          <button type="button" data-host="all" class="active">全部</button>
-          <button type="button" data-host="cursor">Cursor</button>
-          <button type="button" data-host="codex">Codex</button>
-          <button type="button" data-host="starFactory">starFactory</button>
+        <div class="filter">
+          <label class="label" id="host-select-label" for="host-select"
+            >宿主</label
+          >
+          <select id="host-select" class="select">
+            <option value="all">全部</option>
+            <option value="cursor">Cursor</option>
+            <option value="codex">Codex</option>
+            <option value="starFactory">starFactory</option>
+          </select>
         </div>
-        <span class="label">域</span>
-        <div class="seg">
-          <button type="button" data-domain="all" class="active">全部</button>
-          <button type="button" data-domain="skills">Skills</button>
-          <button type="button" data-domain="mcp">MCP</button>
-          <button type="button" data-domain="hooks">Hooks</button>
+        <div class="filter">
+          <label class="label" id="domain-select-label" for="domain-select"
+            >域</label
+          >
+          <select id="domain-select" class="select">
+            <option value="all">全部</option>
+            <option value="skills">Skills</option>
+            <option value="mcp">MCP</option>
+            <option value="hooks">Hooks</option>
+          </select>
+        </div>
+        <div class="actions">
+          <button type="button" class="primary" id="btn-check">检查差异</button>
+          <button type="button" id="btn-apply">写入同步</button>
         </div>
       </div>
       <div class="status-bar">
@@ -868,7 +991,7 @@
             titleEl.textContent = card.id;
             bindFullTip(titleEl, card.id);
             const meta = el.querySelector(".meta");
-            if (card.path) {
+            if (card.path && kind !== "Skills") {
               const pathChip = document.createElement("span");
               pathChip.className = "chip path";
               pathChip.textContent = card.path;
@@ -1053,27 +1176,153 @@
         }
       }
 
-      document.querySelectorAll("[data-host]").forEach((btn) => {
-        btn.onclick = () => {
-          document
-            .querySelectorAll("[data-host]")
-            .forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          selectedHosts =
-            btn.dataset.host === "all" ? [...HOSTS] : [btn.dataset.host];
-          renderSummary();
-          render();
-        };
+      const CHEVRON_SVG =
+        '<svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+      const CHECK_SVG =
+        '<svg class="select-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>';
+
+      function closeAllSelects(except) {
+        document.querySelectorAll(".select-wrap").forEach((wrap) => {
+          if (wrap === except) return;
+          const menu = wrap.querySelector(".select-menu");
+          const trigger = wrap.querySelector(".select-trigger");
+          if (menu) menu.classList.remove("open");
+          if (trigger) trigger.setAttribute("aria-expanded", "false");
+        });
+      }
+
+      function enhanceSelect(select) {
+        const wrap = document.createElement("div");
+        wrap.className = "select-wrap";
+        select.parentNode.insertBefore(wrap, select);
+        wrap.appendChild(select);
+        select.classList.add("select-native");
+        select.tabIndex = -1;
+
+        const menuId = select.id + "-menu";
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "select-trigger";
+        trigger.setAttribute("aria-haspopup", "listbox");
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.setAttribute("aria-controls", menuId);
+        trigger.innerHTML = '<span class="select-value"></span>' + CHEVRON_SVG;
+
+        const menu = document.createElement("ul");
+        menu.className = "select-menu";
+        menu.id = menuId;
+        menu.setAttribute("role", "listbox");
+
+        const valueEl = trigger.querySelector(".select-value");
+        valueEl.id = select.id + "-value";
+        const label = wrap.parentNode.querySelector("label.label");
+        if (label) {
+          if (!label.id) label.id = select.id + "-label";
+          trigger.setAttribute("aria-labelledby", label.id + " " + valueEl.id);
+        }
+
+        function syncFromSelect() {
+          const opts = Array.from(select.options);
+          valueEl.textContent =
+            (select.selectedOptions[0] && select.selectedOptions[0].text) || "";
+          menu.innerHTML = "";
+          opts.forEach((opt) => {
+            const li = document.createElement("li");
+            li.setAttribute("role", "presentation");
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "select-option";
+            btn.setAttribute("role", "option");
+            btn.dataset.value = opt.value;
+            btn.setAttribute(
+              "aria-selected",
+              opt.value === select.value ? "true" : "false",
+            );
+            btn.innerHTML = CHECK_SVG + "<span></span>";
+            btn.querySelector("span").textContent = opt.text;
+            btn.addEventListener("click", () => {
+              if (select.value !== opt.value) {
+                select.value = opt.value;
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+              }
+              closeAllSelects();
+              trigger.focus();
+            });
+            li.appendChild(btn);
+            menu.appendChild(li);
+          });
+        }
+
+        function openMenu() {
+          closeAllSelects(wrap);
+          syncFromSelect();
+          menu.classList.add("open");
+          trigger.setAttribute("aria-expanded", "true");
+          const selected = menu.querySelector('[aria-selected="true"]');
+          if (selected) selected.focus();
+        }
+
+        trigger.addEventListener("click", () => {
+          if (trigger.getAttribute("aria-expanded") === "true") {
+            closeAllSelects();
+          } else {
+            openMenu();
+          }
+        });
+        trigger.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openMenu();
+          }
+        });
+        menu.addEventListener("keydown", (e) => {
+          const items = Array.from(menu.querySelectorAll(".select-option"));
+          const i = items.indexOf(document.activeElement);
+          if (e.key === "Escape") {
+            e.preventDefault();
+            closeAllSelects();
+            trigger.focus();
+          } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            items[Math.min(i + 1, items.length - 1)].focus();
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            items[Math.max(i - 1, 0)].focus();
+          } else if (e.key === "Home") {
+            e.preventDefault();
+            items[0].focus();
+          } else if (e.key === "End") {
+            e.preventDefault();
+            items[items.length - 1].focus();
+          }
+        });
+        select.addEventListener("change", syncFromSelect);
+        select.addEventListener("focus", () => trigger.focus());
+
+        wrap.appendChild(trigger);
+        wrap.appendChild(menu);
+        syncFromSelect();
+      }
+
+      document.addEventListener("pointerdown", (e) => {
+        if (!e.target.closest(".select-wrap")) closeAllSelects();
       });
-      document.querySelectorAll("[data-domain]").forEach((btn) => {
-        btn.onclick = () => {
-          document
-            .querySelectorAll("[data-domain]")
-            .forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          domain = btn.dataset.domain;
-          render();
-        };
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeAllSelects();
+      });
+
+      enhanceSelect($("host-select"));
+      enhanceSelect($("domain-select"));
+
+      $("host-select").addEventListener("change", (e) => {
+        const host = e.target.value;
+        selectedHosts = host === "all" ? [...HOSTS] : [host];
+        renderSummary();
+        render();
+      });
+      $("domain-select").addEventListener("change", (e) => {
+        domain = e.target.value;
+        render();
       });
       $("q").addEventListener("input", render);
 
