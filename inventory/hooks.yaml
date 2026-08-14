@@ -58,7 +58,7 @@ hooks:
         matcher: "*"
         hooks:
           - type: command
-            command: python3 /Users/abnersun/Downloads/code/agent-config-share/scripts/hooks/notify-approval.py
+            command: python3 /Users/abnersun/Downloads/code/agent-loom/scripts/hooks/notify-approval.py
 
   - id: macos-stop-notify
     description: 本轮对话结束时发 macOS 通知
@@ -69,4 +69,4 @@ hooks:
         event: Stop
         hooks:
           - type: command
-            command: python3 /Users/abnersun/Downloads/code/agent-config-share/scripts/hooks/notify-approval.py
+            command: python3 /Users/abnersun/Downloads/code/agent-loom/scripts/hooks/notify-approval.py
