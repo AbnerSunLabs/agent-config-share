@@ -1,4 +1,4 @@
-from agent_config.jsonc import loads, strip_comments
+from agent_loom.jsonc import loads, strip_comments
 
 
 def test_strip_line_comments_outside_strings():

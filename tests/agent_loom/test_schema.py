@@ -1,5 +1,5 @@
 import pytest
-from agent_config.schema import SchemaError, parse_hooks, parse_mcp
+from agent_loom.schema import SchemaError, parse_hooks, parse_mcp
 
 
 def test_mcp_rejects_env_values():

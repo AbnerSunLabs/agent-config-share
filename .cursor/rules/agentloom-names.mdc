@@ -1,0 +1,12 @@
+---
+description: 落盘标记与环境变量只用新名称，不兼容旧键
+alwaysApply: true
+---
+
+# agentLoom 标记与环境变量
+
+- JSON 托管标记：`agentLoomId`
+- TOML 托管标记：`agent_loom_id`
+- 环境变量：`AGENT_LOOM_HOME`、`AGENT_LOOM_ROOT`、`AGENT_LOOM_SHARE_ROOT`、`AGENT_LOOM_BIN_DIR`
+
+禁止读写旧名（`agentConfigId` / `agent_config_id` / `AGENT_CONFIG_*`），不做双键兼容。

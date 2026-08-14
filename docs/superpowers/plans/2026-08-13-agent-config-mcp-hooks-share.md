@@ -4,7 +4,7 @@
 
 **Goal:** 在本仓库用两份 yaml 清单驱动 CLI，对 Codex / Cursor / starFactory 的用户级 MCP 与 Hooks 做 check / merge apply / prune。
 
-**Architecture:** `scripts/agent-config` 为入口；可 import 包在 `scripts/agent_config/`（对应 spec 的 `agent-config.d`，因目录名无法作为 Python 模块）。清单在 `inventory/`。各宿主适配器只负责本宿主文件的读、期望片段、merge、写。测试通过 `AGENT_CONFIG_HOME` 把 `~` 指到临时目录，禁止写真实主目录。
+**Architecture:** `scripts/agent-config` 为入口；可 import 包在 `scripts/agent_config/`（对应 spec 的 `agent-config.d`，因目录名无法作为 Python 模块）。清单在 `inventory/`。各宿主适配器只负责本宿主文件的读、期望片段、merge、写。测试通过 `AGENT_LOOM_HOME` 把 `~` 指到临时目录，禁止写真实主目录。
 
 **Tech Stack:** Python 3.11+（stdlib `tomllib`）、PyYAML、pytest。不改根目录 `package.json`。
 
@@ -14,7 +14,7 @@
 - 不写项目级 `.cursor/mcp.json`、项目 `.mcp.json`、`.starFactory/settings.json`、项目 `.codex/`。
 - 不创建 `~/.agents/mcp.json`；不读不写 `~/.starFactory/mcp.yaml`。
 - 禁止整文件覆盖产品主配置；禁止把密钥字面量写入仓库或从 `.env` 读取。
-- JSON 托管标记 `agentConfigId`；TOML 托管标记 `agent_config_id`。
+- JSON 托管标记 `agentLoomId`；TOML 托管标记 `agent_loom_id`。
 - apply 默认只增不删；`--prune` 只删带标记且（清单无该 id 或当前宿主不在 `hosts`）的条目。
 - 退出码：0 无缺口（未 prune 的托管漂移只警告）；1 有缺口；2 禁止创建的文件缺失或解析失败。
 - `--only mcp|hooks` 不读取未选中域的文件。
@@ -29,7 +29,7 @@
 - Create: `scripts/agent_config/`（`cli.py` `models.py` `schema.py` `paths.py` `envmerge.py` `redact.py` `sync.py`）
 - Create: `scripts/agent_config/adapters/cursor.py` `codex.py` `starfactory.py`
 - Create: `inventory/mcp.yaml` `inventory/hooks.yaml` `inventory/README.md`
-- Create: `tests/agent_config/`（pytest，全部走 `AGENT_CONFIG_HOME`）
+- Create: `tests/agent_config/`（pytest，全部走 `AGENT_LOOM_HOME`）
 - Modify: `docs/superpowers/specs/2026-08-13-agent-config-mcp-hooks-share-design.md` 仅当实现时发现 Python 包名与 spec 目录名需加一句交叉引用（本计划已选定 `agent_config/`）
 
 ---
@@ -51,7 +51,7 @@
 **Interfaces:**
 
 - Consumes: 无
-- Produces: `paths.repo_root() -> Path`；`paths.home() -> Path`（`AGENT_CONFIG_HOME` 或 `Path.home()`）；`paths.inventory_dir() -> Path`；`McpEntry` / `HookEntry` dataclass（本任务只要求能把空 yaml 载成 `list[dict]` 的 `load_yaml(path) -> Any`，完整 dataclass 在 Task 2）
+- Produces: `paths.repo_root() -> Path`；`paths.home() -> Path`（`AGENT_LOOM_HOME` 或 `Path.home()`）；`paths.inventory_dir() -> Path`；`McpEntry` / `HookEntry` dataclass（本任务只要求能把空 yaml 载成 `list[dict]` 的 `load_yaml(path) -> Any`，完整 dataclass 在 Task 2）
 
 - [ ] **Step 1: Write the failing test**
 
@@ -104,7 +104,7 @@ mcp: []
 hooks: []
 ```
 
-`scripts/agent_config/paths.py`：`repo_root()` 从 `paths.py` 向上找到同时含 `inventory/` 与 `scripts/` 的目录。`home()` 读 `AGENT_CONFIG_HOME`。
+`scripts/agent_config/paths.py`：`repo_root()` 从 `paths.py` 向上找到同时含 `inventory/` 与 `scripts/` 的目录。`home()` 读 `AGENT_LOOM_HOME`。
 
 `scripts/agent_config/models.py`：`load_yaml` 用 `yaml.safe_load`，`None` 当 `{}`。
 
@@ -281,7 +281,7 @@ EOF
 **Interfaces:**
 
 - Consumes: `McpEntry`、`merge_env_map`、`paths.home()`
-- Produces: `cursor.mcp_path() -> Path`（`home()/.cursor/mcp.json`）；`check_mcp(entries) -> CheckResult`；`apply_mcp(entries, prune: bool) -> None`。`CheckResult` 含 `gaps: list[str]`、`drift: list[str]`、`file_error: bool`。Cursor 服务器对象含 `command`/`args` 或 `url`、`env`、`headers`（由 `headers_env` 生成引用）、`agentConfigId`。允许创建最小 `{"mcpServers": {}}`。
+- Produces: `cursor.mcp_path() -> Path`（`home()/.cursor/mcp.json`）；`check_mcp(entries) -> CheckResult`；`apply_mcp(entries, prune: bool) -> None`。`CheckResult` 含 `gaps: list[str]`、`drift: list[str]`、`file_error: bool`。Cursor 服务器对象含 `command`/`args` 或 `url`、`env`、`headers`（由 `headers_env` 生成引用）、`agentLoomId`。允许创建最小 `{"mcpServers": {}}`。
 
 - [ ] **Step 1: Write the failing test**
 
@@ -291,21 +291,21 @@ from agent_config.schema import parse_mcp
 from agent_config.adapters import cursor
 
 def test_apply_creates_marked_server_with_env_ref(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     entries = parse_mcp({"mcp": [{"id": "ctx", "hosts": ["cursor"], "transport": "stdio",
                                   "command": "npx", "args": ["-y", "pkg"], "env": ["K"]}]})
     cursor.apply_mcp(entries, prune=False)
     data = json.loads((tmp_path / ".cursor" / "mcp.json").read_text())
     srv = data["mcpServers"]["ctx"]
-    assert srv["agentConfigId"] == "ctx"
+    assert srv["agentLoomId"] == "ctx"
     assert srv["env"]["K"] == "${env:K}"
 
 def test_prune_skips_unmarked_extra(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     p = tmp_path / ".cursor" / "mcp.json"
     p.parent.mkdir(parents=True)
     p.write_text(json.dumps({"mcpServers": {
-        "ctx": {"command": "npx", "args": [], "agentConfigId": "ctx"},
+        "ctx": {"command": "npx", "args": [], "agentLoomId": "ctx"},
         "hand": {"command": "npx", "args": []},
     }}))
     cursor.apply_mcp([], prune=True)
@@ -322,7 +322,7 @@ Expected: FAIL
 
 - [ ] **Step 3: Write minimal implementation**
 
-upsert 按服务器名 = `id`。`hosts` 不含 `cursor` 的条目：不写入；prune 时若现场有 `agentConfigId==id` 则删除。check：清单需要但缺失或非密钥字段不一致 → gap；现场有标记且（清单无 id 或 cursor 不在 hosts）→ drift。非法 JSON → `file_error=True`，不写盘。
+upsert 按服务器名 = `id`。`hosts` 不含 `cursor` 的条目：不写入；prune 时若现场有 `agentLoomId==id` 则删除。check：清单需要但缺失或非密钥字段不一致 → gap；现场有标记且（清单无 id 或 cursor 不在 hosts）→ drift。非法 JSON → `file_error=True`，不写盘。
 
 - [ ] **Step 4: Run the tests and make sure they pass**
 
@@ -356,7 +356,7 @@ EOF
 **Interfaces:**
 
 - Consumes: `McpEntry`、`merge_env_map`
-- Produces: `starfactory.mcp_path() -> home()/.starFactory.json`，只 merge 顶层 `mcpServers`，**禁止创建**该文件（缺失或坏 JSON → `file_error`）；`codex.mcp_path() -> home()/.codex/config.toml`，只改 `mcp_servers` 表（Codex 键名按常见 `[mcp_servers.<id>]`），写 `agent_config_id`，env 引用 `${NAME}`，**禁止创建**缺失的 `config.toml`。同一 apply 里若还要改 hooks，Task 6 保证按文件串行。读 TOML 用 `tomllib`；写回用「解析为 dict → 只替换 `mcp_servers` → dump 整文件」仅当测试夹具无必须保留的无关注释；实现 `dump_toml(doc) -> str` 覆盖 string/list/table。不扫描 `mcp.yaml`。
+- Produces: `starfactory.mcp_path() -> home()/.starFactory.json`，只 merge 顶层 `mcpServers`，**禁止创建**该文件（缺失或坏 JSON → `file_error`）；`codex.mcp_path() -> home()/.codex/config.toml`，只改 `mcp_servers` 表（Codex 键名按常见 `[mcp_servers.<id>]`），写 `agent_loom_id`，env 引用 `${NAME}`，**禁止创建**缺失的 `config.toml`。同一 apply 里若还要改 hooks，Task 6 保证按文件串行。读 TOML 用 `tomllib`；写回用「解析为 dict → 只替换 `mcp_servers` → dump 整文件」仅当测试夹具无必须保留的无关注释；实现 `dump_toml(doc) -> str` 覆盖 string/list/table。不扫描 `mcp.yaml`。
 
 - [ ] **Step 1: Write the failing test**
 
@@ -365,14 +365,14 @@ from agent_config.schema import parse_mcp
 from agent_config.adapters import starfactory, codex
 
 def test_starfactory_missing_file_is_error(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     entries = parse_mcp({"mcp": [{"id": "ctx", "hosts": ["starFactory"], "transport": "stdio",
                                   "command": "npx", "args": []}]})
     r = starfactory.check_mcp(entries)
     assert r.file_error is True
 
 def test_codex_keeps_unrelated_keys(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     cfg = tmp_path / ".codex" / "config.toml"
     cfg.parent.mkdir(parents=True)
     cfg.write_text('model = "gpt"\n')
@@ -382,7 +382,7 @@ def test_codex_keeps_unrelated_keys(tmp_path, monkeypatch):
     text = cfg.read_text()
     assert "model" in text
     assert "ctx" in text
-    assert "agent_config_id" in text
+    assert "agent_loom_id" in text
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -425,7 +425,7 @@ EOF
 **Interfaces:**
 
 - Consumes: `HookEntry`
-- Produces: `check_hooks` / `apply_hooks` 每宿主各一份。Cursor：`home()/.cursor/hooks.json`，结构 `{"hooks": [ {**adapter_fields, "agentConfigId": id} ]}`（yaml `adapters.cursor` 原样并入）；可建骨架。starFactory：`home()/.starFactory/settings.json` 的 `hooks` 键，值为列表，元素为 `{**adapters.starFactory, "agentConfigId": id}`；**禁止创建** settings.json。Codex `resolve_hooks_target() -> tuple[Path, str]` 其中 kind 为 `hooks_json` 或 `config_toml`：① `hooks.json` 存在则只它；② 否则 `config.toml` 含 `hooks` 键则只 toml；③ 否则 check 记缺口，apply 创建 `hooks.json`。toml 已有 hooks 时不得创建 hooks.json。upsert 先按标记，再按 `command`+`event`（adapter 里的 `command` 与 `event` 字段，缺省则只用 command）。prune 只删带标记项。MCP+Hooks 同改 `config.toml` 时：`sync.apply_all` 读一次、改两段、写一次。
+- Produces: `check_hooks` / `apply_hooks` 每宿主各一份。Cursor：`home()/.cursor/hooks.json`，结构 `{"hooks": [ {**adapter_fields, "agentLoomId": id} ]}`（yaml `adapters.cursor` 原样并入）；可建骨架。starFactory：`home()/.starFactory/settings.json` 的 `hooks` 键，值为列表，元素为 `{**adapters.starFactory, "agentLoomId": id}`；**禁止创建** settings.json。Codex `resolve_hooks_target() -> tuple[Path, str]` 其中 kind 为 `hooks_json` 或 `config_toml`：① `hooks.json` 存在则只它；② 否则 `config.toml` 含 `hooks` 键则只 toml；③ 否则 check 记缺口，apply 创建 `hooks.json`。toml 已有 hooks 时不得创建 hooks.json。upsert 先按标记，再按 `command`+`event`（adapter 里的 `command` 与 `event` 字段，缺省则只用 command）。prune 只删带标记项。MCP+Hooks 同改 `config.toml` 时：`sync.apply_all` 读一次、改两段、写一次。
 
 - [ ] **Step 1: Write the failing test**
 
@@ -435,7 +435,7 @@ from agent_config.schema import parse_hooks
 from agent_config.adapters import cursor, codex
 
 def test_hook_skips_cursor_when_not_in_hosts(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     (tmp_path / ".cursor").mkdir()
     (tmp_path / ".cursor" / "hooks.json").write_text(json.dumps({"hooks": []}))
     entries = parse_hooks({"hooks": [{"id": "git-ai-checkpoint", "hosts": ["codex"],
@@ -445,7 +445,7 @@ def test_hook_skips_cursor_when_not_in_hosts(tmp_path, monkeypatch):
     assert data["hooks"] == []
 
 def test_codex_uses_toml_hooks_not_new_json(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     d = tmp_path / ".codex"
     d.mkdir()
     (d / "config.toml").write_text("[hooks]\nplaceholder = true\n")
@@ -464,7 +464,7 @@ Expected: FAIL
 
 - [ ] **Step 3: Write minimal implementation**
 
-Codex toml 的 hooks 用 `hooks.managed = [{...}]` 列表存放本工具条目，并保留已有其它 `hooks` 键。若官方 schema 是另一形状，仍把 `adapters.codex` 整块放入列表项并加 `agent_config_id`。双文件并存只读写 `hooks.json`。
+Codex toml 的 hooks 用 `hooks.managed = [{...}]` 列表存放本工具条目，并保留已有其它 `hooks` 键。若官方 schema 是另一形状，仍把 `adapters.codex` 整块放入列表项并加 `agent_loom_id`。双文件并存只读写 `hooks.json`。
 
 - [ ] **Step 4: Run the tests and make sure they pass**
 
@@ -506,7 +506,7 @@ import json
 from agent_config.cli import main
 
 def test_only_hooks_ignores_broken_mcp_json(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: []\n")
@@ -518,7 +518,7 @@ def test_only_hooks_ignores_broken_mcp_json(tmp_path, monkeypatch):
     assert main(["sync", "--only", "hooks"]) == 0
 
 def test_apply_requires_prune_flag_combo(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: []\n")

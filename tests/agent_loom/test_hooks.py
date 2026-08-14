@@ -1,12 +1,12 @@
 import json
 
-from agent_config.schema import parse_hooks
-from agent_config.adapters import cursor, codex
-from agent_config import sync
+from agent_loom.schema import parse_hooks
+from agent_loom.adapters import cursor, codex
+from agent_loom import sync
 
 
 def test_hook_skips_cursor_when_not_in_hosts(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     (tmp_path / ".cursor").mkdir()
     (tmp_path / ".cursor" / "hooks.json").write_text(json.dumps({"hooks": []}))
     entries = parse_hooks({"hooks": [{"id": "git-ai-checkpoint", "description": "用途", "hosts": ["codex"],
@@ -17,7 +17,7 @@ def test_hook_skips_cursor_when_not_in_hosts(tmp_path, monkeypatch):
 
 
 def test_codex_uses_toml_hooks_not_new_json(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     d = tmp_path / ".codex"
     d.mkdir()
     (d / "config.toml").write_text("[hooks]\nplaceholder = true\n")
@@ -29,7 +29,7 @@ def test_codex_uses_toml_hooks_not_new_json(tmp_path, monkeypatch):
 
 
 def test_codex_broken_toml_does_not_create_hooks_json(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     d = tmp_path / ".codex"
     d.mkdir()
     (d / "config.toml").write_text("[hooks\n")
@@ -42,7 +42,7 @@ def test_codex_broken_toml_does_not_create_hooks_json(tmp_path, monkeypatch):
 
 
 def test_sync_check_hooks_aggregates_codex(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     d = tmp_path / ".codex"
     d.mkdir()
     (d / "config.toml").write_text("[hooks]\nplaceholder = true\n")
@@ -53,7 +53,7 @@ def test_sync_check_hooks_aggregates_codex(tmp_path, monkeypatch):
 
 
 def test_cursor_hooks_jsonc_comments_are_ok(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     (tmp_path / ".cursor").mkdir()
     (tmp_path / ".cursor" / "hooks.json").write_text(
         '{\n  "version": 1,\n  "hooks": {\n    // "beforeShellExecution": []\n  }\n}\n'
@@ -64,8 +64,8 @@ def test_cursor_hooks_jsonc_comments_are_ok(tmp_path, monkeypatch):
 
 
 def test_starfactory_event_map_hooks_are_ok(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
-    from agent_config.adapters import starfactory
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
+    from agent_loom.adapters import starfactory
 
     settings = tmp_path / ".starFactory" / "settings.json"
     settings.parent.mkdir()
@@ -88,6 +88,6 @@ def test_starfactory_event_map_hooks_are_ok(tmp_path, monkeypatch):
     assert data["model"] == "x"
     assert data["hooks"]["PostToolUse"][0]["command"] == "echo"
     managed = data["hooks"]["SessionEnd"]
-    assert managed[0]["agentConfigId"] == "git-ai"
+    assert managed[0]["agentLoomId"] == "git-ai"
     assert "event" not in managed[0]
 

@@ -7,9 +7,9 @@ from typing import Any
 
 import yaml
 
-from agent_config import paths, sync
-from agent_config.models import CheckResult, HookEntry, McpEntry
-from agent_config.schema import HOSTS
+from agent_loom import paths, sync
+from agent_loom.models import CheckResult, HookEntry, McpEntry
+from agent_loom.schema import HOSTS
 
 SKILL_ROOTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     (".agents", HOSTS),

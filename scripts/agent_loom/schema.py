@@ -1,6 +1,6 @@
 from typing import Any
 
-from agent_config.models import HookEntry, McpEntry
+from agent_loom.models import HookEntry, McpEntry
 
 HOSTS = ("cursor", "codex", "starFactory")
 

@@ -1,15 +1,15 @@
 from pathlib import Path
 
-from agent_config.cli import main
+from agent_loom.cli import main
 
 
 def test_only_hooks_ignores_broken_mcp_json(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: []\n")
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     (tmp_path / ".cursor").mkdir()
     (tmp_path / ".cursor" / "mcp.json").write_text("{")
     (tmp_path / ".cursor" / "hooks.json").write_text('{"hooks": []}')
@@ -17,45 +17,45 @@ def test_only_hooks_ignores_broken_mcp_json(tmp_path, monkeypatch):
 
 
 def test_apply_requires_prune_flag_combo(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: []\n")
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     assert main(["sync", "--prune"]) == 2
 
 
 def test_schema_error_exits_2(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: not-a-list\n")
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     assert main(["sync"]) == 2
     err = capsys.readouterr().err
     assert "清单无效" in err
 
 
 def test_check_prints_ok_when_clean(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: []\n")
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     assert main(["sync", "--only", "mcp"]) == 0
     assert "OK" in capsys.readouterr().out
 
 
 def test_check_prints_unreadable_file(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: []\n")
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     (tmp_path / ".cursor").mkdir()
     (tmp_path / ".cursor" / "mcp.json").write_text("{")
     assert main(["sync", "--only", "mcp"]) == 2
@@ -65,7 +65,7 @@ def test_check_prints_unreadable_file(tmp_path, monkeypatch, capsys):
 
 
 def test_gaps_exit_1(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text(
@@ -78,14 +78,14 @@ def test_gaps_exit_1(tmp_path, monkeypatch):
         "    args: []\n"
     )
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     (tmp_path / ".cursor").mkdir()
     (tmp_path / ".cursor" / "mcp.json").write_text('{"mcpServers": {}}')
     assert main(["sync", "--only", "mcp"]) == 1
 
 
 def test_apply_backups_existing_files(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text(
@@ -98,7 +98,7 @@ def test_apply_backups_existing_files(tmp_path, monkeypatch):
         "    args: []\n"
     )
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     cursor_dir = tmp_path / ".cursor"
     cursor_dir.mkdir()
     original = '{"mcpServers": {}}'
@@ -112,7 +112,7 @@ def test_apply_backups_existing_files(tmp_path, monkeypatch):
         backup_dirs.append(d)
         return d
 
-    monkeypatch.setattr("agent_config.sync.tempfile.mkdtemp", capture_mkdtemp)
+    monkeypatch.setattr("agent_loom.sync.tempfile.mkdtemp", capture_mkdtemp)
     assert main(["sync", "--apply", "--only", "mcp"]) == 0
     assert backup_dirs
     backup_mcp = Path(backup_dirs[0]) / "mcp.json"
@@ -120,9 +120,9 @@ def test_apply_backups_existing_files(tmp_path, monkeypatch):
 
 
 def test_sync_check_mcp_aggregates_three_hosts(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
-    from agent_config import sync
-    from agent_config.schema import parse_mcp
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
+    from agent_loom import sync
+    from agent_loom.schema import parse_mcp
 
     (tmp_path / ".starFactory.json").write_text("{")
     entries = parse_mcp(
@@ -144,12 +144,12 @@ def test_sync_check_mcp_aggregates_three_hosts(tmp_path, monkeypatch):
 
 
 def test_host_cursor_ignores_broken_starfactory(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: []\n")
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     (tmp_path / ".starFactory.json").write_text("{")
     (tmp_path / ".cursor").mkdir()
     (tmp_path / ".cursor" / "mcp.json").write_text('{"mcpServers": {}}')
@@ -157,7 +157,7 @@ def test_host_cursor_ignores_broken_starfactory(tmp_path, monkeypatch):
 
 
 def test_host_cursor_apply_does_not_write_codex(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text(
@@ -170,7 +170,7 @@ def test_host_cursor_apply_does_not_write_codex(tmp_path, monkeypatch):
         "    args: []\n"
     )
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     (tmp_path / ".cursor").mkdir()
     (tmp_path / ".cursor" / "mcp.json").write_text('{"mcpServers": {}}')
     (tmp_path / ".codex").mkdir()

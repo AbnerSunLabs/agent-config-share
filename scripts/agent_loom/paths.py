@@ -4,7 +4,7 @@ from pathlib import Path
 
 def repo_root() -> Path:
     """向上查找同时包含 inventory/ 与 scripts/ 的仓库根目录。"""
-    override = os.environ.get("AGENT_CONFIG_ROOT")
+    override = os.environ.get("AGENT_LOOM_ROOT")
     if override:
         return Path(override)
     current = Path(__file__).resolve().parent
@@ -15,8 +15,8 @@ def repo_root() -> Path:
 
 
 def home() -> Path:
-    """返回用户主目录，优先使用 AGENT_CONFIG_HOME 环境变量。"""
-    env_home = os.environ.get("AGENT_CONFIG_HOME")
+    """返回用户主目录，优先使用 AGENT_LOOM_HOME 环境变量。"""
+    env_home = os.environ.get("AGENT_LOOM_HOME")
     if env_home:
         return Path(env_home)
     return Path.home()

@@ -6,11 +6,11 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from agent_config.adapters import codex, cursor, starfactory
-from agent_config.models import CheckResult, HookEntry, McpEntry, load_yaml
-from agent_config import paths
-from agent_config.redact import safe_print
-from agent_config.schema import HOSTS, parse_hooks, parse_mcp
+from agent_loom.adapters import codex, cursor, starfactory
+from agent_loom.models import CheckResult, HookEntry, McpEntry, load_yaml
+from agent_loom import paths
+from agent_loom.redact import safe_print
+from agent_loom.schema import HOSTS, parse_hooks, parse_mcp
 
 _ADAPTERS = {
     "cursor": cursor,
@@ -173,7 +173,7 @@ def backup_files(paths: list[Path]) -> Path | None:
     existing = [p for p in paths if p.is_file()]
     if not existing:
         return None
-    backup_dir = Path(tempfile.mkdtemp(prefix="agent-config-"))
+    backup_dir = Path(tempfile.mkdtemp(prefix="agentloom-"))
     for path in existing:
         dest = backup_dir / path.name
         if dest.exists():

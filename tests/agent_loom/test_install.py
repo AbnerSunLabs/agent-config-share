@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from agent_config.cli import _build_parser
+from agent_loom.cli import _build_parser
 
 
 def test_ui_help_lists_command():
@@ -29,12 +29,12 @@ def test_local_install_writes_shim(tmp_path):
     (repo / "inventory").mkdir(parents=True)
     (repo / "scripts").mkdir()
     (repo / "inventory" / "mcp.yaml").write_text("mcp: []\n")
-    (repo / "scripts" / "agent-config").write_text("#!/usr/bin/env python3\nprint(0)\n")
+    (repo / "scripts" / "agentloom").write_text("#!/usr/bin/env python3\nprint(0)\n")
     shutil.copy(src / "scripts" / "requirements-run.txt", repo / "scripts" / "requirements-run.txt")
     shutil.copy(src / "install.sh", repo / "install.sh")
     bin_dir = tmp_path / "bin"
     env = dict(os.environ)
-    env["AGENT_CONFIG_BIN_DIR"] = str(bin_dir)
+    env["AGENT_LOOM_BIN_DIR"] = str(bin_dir)
     env["HOME"] = str(tmp_path)
     result = subprocess.run(
         ["sh", str(repo / "install.sh")],
@@ -45,8 +45,8 @@ def test_local_install_writes_shim(tmp_path):
         env=env,
     )
     assert result.returncode == 0, result.stderr + result.stdout
-    shim = bin_dir / "agent-config"
+    shim = bin_dir / "agentloom"
     assert shim.is_file()
     text = shim.read_text()
     assert str(repo / ".venv" / "bin" / "python") in text
-    assert str(repo / "scripts" / "agent-config") in text
+    assert str(repo / "scripts" / "agentloom") in text

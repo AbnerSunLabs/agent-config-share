@@ -1,10 +1,10 @@
 ---
-name: agent-config-ui
+name: agentloom-ui
 source: Linear tokens via https://github.com/VoltAgent/awesome-design-md/tree/main/design-md/linear.app
 direction: dense, quiet, scannable ops tool (frontend-design-direction)
 ---
 
-# agent-config ui 视觉方向
+# agentloom ui 视觉方向
 
 日常配置工作台，不是营销页。深蓝画布上用三套域色区分卡片：MCP 紫、Hooks 橙、Skills 青绿；宿主再用蓝 / 青 / 粉 chip。
 

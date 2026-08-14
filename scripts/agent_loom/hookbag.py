@@ -4,9 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from agent_config.models import HookEntry
+from agent_loom.models import HookEntry
 
-_DEFAULT_MARKER = "agentConfigId"
+_DEFAULT_MARKER = "agentLoomId"
+_LEGACY_MARKERS = ("agentConfigId", "agent_config_id")
+
+
+def drop_legacy_markers(obj: dict[str, Any]) -> None:
+    """写入时去掉旧托管键，避免新旧标记并存。"""
+    for key in _LEGACY_MARKERS:
+        obj.pop(key, None)
 
 
 def hooks_container_ok(hooks: Any) -> bool:
@@ -113,6 +120,7 @@ def upsert_body(
     marker_key: str = _DEFAULT_MARKER,
 ) -> dict[str, Any]:
     base = dict(existing) if existing else {}
+    drop_legacy_markers(base)
     adapter = dict(entry.adapters[host])
     if map_mode:
         adapter.pop("event", None)

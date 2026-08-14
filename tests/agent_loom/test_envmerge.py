@@ -1,4 +1,4 @@
-from agent_config.envmerge import merge_env_map
+from agent_loom.envmerge import merge_env_map
 
 
 def test_keeps_live_literal():

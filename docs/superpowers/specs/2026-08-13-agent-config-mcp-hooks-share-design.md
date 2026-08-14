@@ -85,17 +85,17 @@ python3 scripts/agent-config sync --only hooks
 
 **托管标记（MCP 与 Hooks 同一规则）：**
 
-- JSON 对象：写入 `"agentConfigId": "<id>"`。
-- TOML 表：写入 `agent_config_id = "<id>"`。
+- JSON 对象：写入 `"agentLoomId": "<id>"`。
+- TOML 表：写入 `agent_loom_id = "<id>"`。
 - 若某宿主加载器会因未知字段拒绝配置，该宿主适配器 **禁止写标记**，且对该宿主 **禁用 prune、不把「现场有同名但无标记」报成托管漂移**（upsert 仍按 `id` == 服务器名 / 约定 hook 槽位）。V1 默认假定 Cursor JSON、Codex TOML 未知键可保留；实现时用最小样例验证，若验证失败则按「禁标记」降级并在 `--check` 打一行警告。
 
 `--prune` 只删除带本工具标记、且满足以下任一条件的条目：清单里已无该 `id`；或清单仍有该 `id` 但 **当前宿主不在其 `hosts` 中**。无标记条目永不 prune。
 
 宿主展开规则（适配器内实现，清单不写三份 JSON）：
 
-- **Cursor** `~/.cursor/mcp.json`：`mcpServers.<id>`，并写 `agentConfigId`。
-- **Codex** `~/.codex/config.toml`：只改 MCP 相关表，并写 `agent_config_id`。
-- **starFactory** `~/.starFactory.json`：只 merge 顶层（user scope）`mcpServers.<id>`，并写 `agentConfigId`。
+- **Cursor** `~/.cursor/mcp.json`：`mcpServers.<id>`，并写 `agentLoomId`。
+- **Codex** `~/.codex/config.toml`：只改 MCP 相关表，并写 `agent_loom_id`。
+- **starFactory** `~/.starFactory.json`：只 merge 顶层（user scope）`mcpServers.<id>`，并写 `agentLoomId`。
 
 `hosts` 未包含的宿主：check 不报缺口，默认 apply 不写入、不删除该宿主上同名服务器（即使名字碰巧相同）。该宿主上若已有带本工具标记的同 id 条目，仅 `--prune` 时删除。
 
@@ -120,7 +120,7 @@ http 的 `headers_env` 同样按 1–3 处理。新建服务器对象时走第 2
 
 V1 不发明跨宿主统一事件名。`adapters.cursor` / `adapters.codex` / `adapters.starFactory` 的键名按该宿主官方 schema 填写；缺某个已声明 host 的 adapter 块则 schema 校验失败。
 
-匹配与 upsert：每个 adapter 块映射到宿主文件里**一条** hook。识别顺序：① `agentConfigId` / `agent_config_id`；② 无论是否可写标记，再用 yaml 写死的 `command` + 事件名匹配，避免在已有未标记同类 hook 旁再插一条。② 只用于 upsert，不用于 prune。禁止三家共用一份 hooks 文件或互相软链。
+匹配与 upsert：每个 adapter 块映射到宿主文件里**一条** hook。识别顺序：① `agentLoomId` / `agent_loom_id`；② 无论是否可写标记，再用 yaml 写死的 `command` + 事件名匹配，避免在已有未标记同类 hook 旁再插一条。② 只用于 upsert，不用于 prune。禁止三家共用一份 hooks 文件或互相软链。
 
 ### 4.3 清单示例（形状以字段为准，值可替换）
 
@@ -233,7 +233,7 @@ inventory/mcp.yaml + inventory/hooks.yaml
 
 1. 清单增加一条 `hosts: [cursor, codex, starFactory]` 的 stdio MCP（含 `env` 变量名），`--apply` 后三家用户级入口都能查到同名服务器且带托管标记。新建的 `env` 键为引用而非字面量；若某宿主该键事先已有字面量，apply 后字面量仍在。
 2. 清单增加一条仅 `hosts: [codex, starFactory]` 的 hook（可按本机已有 git-ai 意图填写 adapters），Cursor hooks 文件不被写入该条。
-3. 在 Cursor `mcp.json` 手加一个清单没有、也无 `agentConfigId` 的服务器，默认 `--apply` 与 `--prune` 后该服务器都仍在。清单曾写入且带标记、后来从 yaml 删除的条目，仅 `--prune` 后消失。从某条的 `hosts` 中去掉某一宿主后，仅 `--prune` 才删除该宿主上带标记的对应条目。
+3. 在 Cursor `mcp.json` 手加一个清单没有、也无 `agentLoomId` 的服务器，默认 `--apply` 与 `--prune` 后该服务器都仍在。清单曾写入且带标记、后来从 yaml 删除的条目，仅 `--prune` 后消失。从某条的 `hosts` 中去掉某一宿主后，仅 `--prune` 才删除该宿主上带标记的对应条目。
 4. 破坏 `~/.starFactory.json` 为非法 JSON，`--check`/`--apply` 跳过该文件并以退出码 2 结束，Cursor/Codex 文件若本来合法仍按规则处理（apply 已改的不强制回滚）。
 5. `inventory/` 与 `scripts/` 的 git diff 中无真实密钥。
 

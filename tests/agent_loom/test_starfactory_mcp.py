@@ -1,11 +1,11 @@
 import json
 
-from agent_config.adapters import starfactory
-from agent_config.schema import parse_mcp
+from agent_loom.adapters import starfactory
+from agent_loom.schema import parse_mcp
 
 
 def test_starfactory_missing_file_is_error(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     entries = parse_mcp(
         {
             "mcp": [
@@ -25,7 +25,7 @@ def test_starfactory_missing_file_is_error(tmp_path, monkeypatch):
 
 
 def test_apply_creates_marked_server_with_env_ref(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     p = tmp_path / ".starFactory.json"
     p.write_text(json.dumps({"other": 1}))
     entries = parse_mcp(
@@ -47,12 +47,12 @@ def test_apply_creates_marked_server_with_env_ref(tmp_path, monkeypatch):
     data = json.loads(p.read_text())
     assert data["other"] == 1
     srv = data["mcpServers"]["ctx"]
-    assert srv["agentConfigId"] == "ctx"
+    assert srv["agentLoomId"] == "ctx"
     assert srv["env"]["K"] == "${K}"
 
 
 def test_apply_skips_when_file_missing(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     entries = parse_mcp(
         {
             "mcp": [
@@ -72,13 +72,13 @@ def test_apply_skips_when_file_missing(tmp_path, monkeypatch):
 
 
 def test_prune_skips_unmarked_extra(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     p = tmp_path / ".starFactory.json"
     p.write_text(
         json.dumps(
             {
                 "mcpServers": {
-                    "ctx": {"command": "npx", "args": [], "agentConfigId": "ctx"},
+                    "ctx": {"command": "npx", "args": [], "agentLoomId": "ctx"},
                     "hand": {"command": "npx", "args": []},
                 }
             }
@@ -91,13 +91,13 @@ def test_prune_skips_unmarked_extra(tmp_path, monkeypatch):
 
 
 def test_check_reports_drift_for_orphan_marked_server(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     p = tmp_path / ".starFactory.json"
     p.write_text(
         json.dumps(
             {
                 "mcpServers": {
-                    "old": {"command": "npx", "args": [], "agentConfigId": "old"},
+                    "old": {"command": "npx", "args": [], "agentLoomId": "old"},
                 }
             }
         )
@@ -109,7 +109,7 @@ def test_check_reports_drift_for_orphan_marked_server(tmp_path, monkeypatch):
 
 
 def test_check_file_error_on_invalid_json(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     p = tmp_path / ".starFactory.json"
     p.write_text("{")
     result = starfactory.check_mcp([])

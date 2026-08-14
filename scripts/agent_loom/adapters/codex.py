@@ -7,11 +7,11 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from agent_config.envmerge import merge_env_map, ref_for
-from agent_config.envmerge import _ref_name  # noqa: PLC2701 — 复用引用解析
-from agent_config import hookbag
-from agent_config.models import CheckResult, HookEntry, McpEntry
-from agent_config.paths import home
+from agent_loom.envmerge import merge_env_map, ref_for
+from agent_loom.envmerge import _ref_name  # noqa: PLC2701 — 复用引用解析
+from agent_loom import hookbag
+from agent_loom.models import CheckResult, HookEntry, McpEntry
+from agent_loom.paths import home
 
 HOST = "codex"
 
@@ -98,7 +98,8 @@ def _merge_headers(
 
 def _upsert_server(entry: McpEntry, existing: dict[str, Any] | None) -> dict[str, Any]:
     base = dict(existing) if existing else {}
-    base["agent_config_id"] = entry.id
+    hookbag.drop_legacy_markers(base)
+    base["agent_loom_id"] = entry.id
     if entry.transport == "stdio":
         base["command"] = entry.command
         base["args"] = entry.args or []
@@ -138,7 +139,7 @@ def _headers_refs_ok(headers: dict[str, str], headers_env: dict[str, str]) -> bo
 
 
 def _server_matches(entry: McpEntry, actual: dict[str, Any]) -> bool:
-    if actual.get("agent_config_id") != entry.id:
+    if actual.get("agent_loom_id") != entry.id:
         return False
     if entry.transport == "stdio":
         if actual.get("command") != entry.command:
@@ -206,7 +207,7 @@ def check_mcp(entries: list[McpEntry]) -> CheckResult:
     for name, srv in servers.items():
         if not isinstance(srv, dict):
             continue
-        marker = srv.get("agent_config_id")
+        marker = srv.get("agent_loom_id")
         if not marker:
             continue
         if marker not in wanted_ids:
@@ -244,7 +245,7 @@ def _apply_mcp_to_data(data: dict[str, Any], entries: list[McpEntry], prune: boo
         for name, srv in servers.items():
             if not isinstance(srv, dict):
                 continue
-            marker = srv.get("agent_config_id")
+            marker = srv.get("agent_loom_id")
             if not marker:
                 continue
             if marker not in wanted_ids:
@@ -293,7 +294,7 @@ def _find_hook_index(hooks: list[Any], entry: HookEntry) -> int | None:
     for i, hook in enumerate(hooks):
         if not isinstance(hook, dict):
             continue
-        if hook.get("agent_config_id") == entry.id:
+        if hook.get("agent_loom_id") == entry.id:
             return i
 
     for i, hook in enumerate(hooks):
@@ -310,13 +311,14 @@ def _find_hook_index(hooks: list[Any], entry: HookEntry) -> int | None:
 
 def _upsert_hook(entry: HookEntry, existing: dict[str, Any] | None) -> dict[str, Any]:
     base = dict(existing) if existing else {}
+    hookbag.drop_legacy_markers(base)
     base.update(entry.adapters[HOST])
-    base["agent_config_id"] = entry.id
+    base["agent_loom_id"] = entry.id
     return base
 
 
 def _hook_matches(entry: HookEntry, actual: dict[str, Any]) -> bool:
-    if actual.get("agent_config_id") != entry.id:
+    if actual.get("agent_loom_id") != entry.id:
         return False
     adapter = entry.adapters[HOST]
     for key, val in adapter.items():
@@ -335,7 +337,7 @@ def _prune_hooks_list(
         if not isinstance(hook, dict):
             result.append(hook)
             continue
-        marker = hook.get("agent_config_id")
+        marker = hook.get("agent_loom_id")
         if not marker:
             result.append(hook)
             continue
@@ -355,7 +357,7 @@ def _apply_hooks_to_data(data: dict[str, Any], entries: list[HookEntry], prune: 
 
     wanted = _host_hook_entries(entries)
     wanted_ids = {e.id for e in wanted}
-    marker = "agent_config_id"
+    marker = "agent_loom_id"
 
     for entry in wanted:
         loc = hookbag.find_hook(hooks_table, entry, HOST, marker_key=marker)
@@ -444,7 +446,7 @@ def check_hooks(entries: list[HookEntry]) -> CheckResult:
         for i, hook in enumerate(hooks):
             if not isinstance(hook, dict):
                 continue
-            marker = hook.get("agent_config_id")
+            marker = hook.get("agent_loom_id")
             if not marker:
                 continue
             if marker not in wanted_ids:
@@ -467,7 +469,7 @@ def check_hooks(entries: list[HookEntry]) -> CheckResult:
     hooks_table = data.get("hooks", {})
     if not isinstance(hooks_table, dict):
         hooks_table = {}
-    marker = "agent_config_id"
+    marker = "agent_loom_id"
     for entry in wanted:
         loc = hookbag.find_hook(hooks_table, entry, HOST, marker_key=marker)
         if loc is None:

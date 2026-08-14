@@ -24,7 +24,7 @@ AI 只有在范围变化、未授权高风险操作、外部权限缺失、严�
 ## 目录说明
 
 ```text
-agent-config-share/
+agent-loom/
 ├── README.md
 ├── implementation-plan.md          # 本仓库建设记录，接入业务项目时可忽略
 ├── .agent-workflow/
@@ -87,8 +87,8 @@ AI 必须按下列步骤自动完成前置工作（人工只审结果，不手�
 用户级 MCP / Hooks / Skills 可用本机面板浏览，并点按钮做检查与写入：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AbnerSunLabs/agent-config-share/main/install.sh | sh
-agent-config ui
+curl -fsSL https://raw.githubusercontent.com/AbnerSunLabs/agent-loom/main/install.sh | sh
+agentloom ui
 ```
 
 清单与 CLI 说明见 `inventory/README.md`。

@@ -1,16 +1,16 @@
-"""agent-config CLI 入口。"""
+"""agentloom CLI 入口。"""
 
 from __future__ import annotations
 
 import argparse
 import sys
 
-from agent_config import sync
-from agent_config.schema import HOSTS, SchemaError
+from agent_loom import sync
+from agent_loom.schema import HOSTS, SchemaError
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="agent-config")
+    parser = argparse.ArgumentParser(prog="agentloom")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     sync_parser = subparsers.add_parser("sync", help="同步 MCP / Hooks 配置")
@@ -62,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
 
     if args.command == "ui":
-        from agent_config.ui import serve
+        from agent_loom.ui import serve
 
         return serve(args.port, open_browser=not args.no_open)
 

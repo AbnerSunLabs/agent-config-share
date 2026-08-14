@@ -1,21 +1,21 @@
 import json
 
-from agent_config.schema import parse_hooks, parse_mcp
-from agent_config import ui, ui_catalog
+from agent_loom.schema import parse_hooks, parse_mcp
+from agent_loom import ui, ui_catalog
 
 
 def _mcp(tmp_path, monkeypatch, text):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text(text)
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     return inv
 
 
 def test_scan_skills_reads_description_and_splits_roots(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     a = tmp_path / ".agents" / "skills" / "playwright"
     a.mkdir(parents=True)
     (a / "SKILL.md").write_text("---\nname: playwright\ndescription: 浏览器自动化\n---\n# hi\n")
@@ -33,7 +33,7 @@ def test_scan_skills_reads_description_and_splits_roots(tmp_path, monkeypatch):
 
 
 def test_file_error_marks_only_that_domain(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     entries = parse_mcp(
         {
             "mcp": [
@@ -73,7 +73,7 @@ def test_file_error_marks_only_that_domain(tmp_path, monkeypatch):
 
 
 def test_gap_status_and_unmatched_drift_not_a_card(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     entries = parse_mcp(
         {
             "mcp": [
@@ -142,19 +142,19 @@ def test_dispatch_apply_writes(tmp_path, monkeypatch):
 
 
 def test_catalog_schema_error(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     inv = tmp_path / "inv"
     inv.mkdir()
     (inv / "mcp.yaml").write_text("mcp: not-a-list\n")
     (inv / "hooks.yaml").write_text("hooks: []\n")
-    monkeypatch.setattr("agent_config.paths.inventory_dir", lambda: inv)
+    monkeypatch.setattr("agent_loom.paths.inventory_dir", lambda: inv)
     status, _, body = ui.dispatch("GET", "/api/catalog")
     assert status == 400
     assert json.loads(body)["error"] == "schema"
 
 
 def test_skills_open_allows_whitelist(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     skill = tmp_path / ".agents" / "skills" / "demo"
     skill.mkdir(parents=True)
     (skill / "SKILL.md").write_text("---\ndescription: 示例\n---\n")
@@ -176,7 +176,7 @@ def test_skills_open_allows_whitelist(tmp_path, monkeypatch):
 
 
 def test_skills_open_rejects_outside_whitelist(tmp_path, monkeypatch):
-    monkeypatch.setenv("AGENT_CONFIG_HOME", str(tmp_path))
+    monkeypatch.setenv("AGENT_LOOM_HOME", str(tmp_path))
     status, _, body = ui.dispatch(
         "POST",
         "/api/skills/open",
@@ -193,7 +193,7 @@ def test_bind_host_is_loopback():
 def test_index_served():
     status, ctype, body = ui.dispatch("GET", "/")
     assert status == 200
-    assert b"agent-config ui" in body
+    assert b"agentloom ui" in body
     assert "html" in ctype
 
 

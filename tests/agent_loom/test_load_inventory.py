@@ -1,6 +1,6 @@
-from agent_config.paths import inventory_dir, repo_root
-from agent_config.models import load_yaml
-from agent_config.schema import parse_hooks, parse_mcp
+from agent_loom.paths import inventory_dir, repo_root
+from agent_loom.models import load_yaml
+from agent_loom.schema import parse_hooks, parse_mcp
 
 
 def test_inventory_yaml_loads_and_parses():

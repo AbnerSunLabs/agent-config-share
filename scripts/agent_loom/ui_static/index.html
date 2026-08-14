@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>agent-config ui</title>
+    <title>agentloom ui</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,7 +12,7 @@
     />
     <script>
       (function () {
-        var key = "agent-config-ui-theme";
+        var key = "agentloom-ui-theme";
         var mode = localStorage.getItem(key) || "system";
         var light = window.matchMedia("(prefers-color-scheme: light)").matches;
         var resolved =
@@ -1326,7 +1326,7 @@
       });
       $("q").addEventListener("input", render);
 
-      const THEME_KEY = "agent-config-ui-theme";
+      const THEME_KEY = "agentloom-ui-theme";
       const themeMql = window.matchMedia("(prefers-color-scheme: light)");
 
       function resolveTheme(mode) {

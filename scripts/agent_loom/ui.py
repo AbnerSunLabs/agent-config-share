@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
-from agent_config import sync, ui_catalog
-from agent_config.schema import HOSTS, SchemaError
+from agent_loom import sync, ui_catalog
+from agent_loom.schema import HOSTS, SchemaError
 
 BIND_HOST = "127.0.0.1"
 STATIC_DIR = Path(__file__).resolve().parent / "ui_static"

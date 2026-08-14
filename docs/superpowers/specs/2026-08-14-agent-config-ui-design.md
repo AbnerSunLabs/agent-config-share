@@ -83,7 +83,7 @@ tests/agent_config/test_install.py   # shim 内容与安装目录约定（不真
 对外主入口（skillshare 同款形态）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AbnerSunLabs/agent-config-share/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/AbnerSunLabs/agent-loom/main/install.sh | sh
 agent-config ui
 agent-config ui --port 8765
 agent-config ui --no-open
@@ -96,13 +96,13 @@ agent-config sync --check
 
 前置：`git`、`python3`（3.9+，且 `python3 -m venv` 可用）、`curl`。缺任一则 stderr 说明并退出非 0。
 
-远程 clone URL 固定为：`https://github.com/AbnerSunLabs/agent-config-share.git`（与 raw `install.sh` 同一仓库、默认分支 `main`）。
+远程 clone URL 固定为：`https://github.com/AbnerSunLabs/agent-loom.git`（与 raw `install.sh` 同一仓库、默认分支 `main`）。
 
 本地 vs 远程判定：脚本通过 `$0` 能定位到仓库根（该目录同时有 `inventory/` 与 `scripts/`）→ **本地安装**。`curl | sh` 时脚本在 stdin / 临时文件、旁路没有这两目录 → **远程安装**。
 
 | 模式     | 如何触发                                              | 代码与清单落在哪                                                                                    |
 | -------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| 远程安装 | `curl \| sh`（旁路无本仓库工作树）                    | clone/更新到 `$HOME/.local/share/agent-config-share`（可用环境变量 `AGENT_CONFIG_SHARE_ROOT` 覆盖） |
+| 远程安装 | `curl \| sh`（旁路无本仓库工作树）                    | clone/更新到 `$HOME/.local/share/agent-loom`（可用环境变量 `AGENT_LOOM_SHARE_ROOT` 覆盖） |
 | 本地安装 | 在 git clone 里执行 `./install.sh` 或 `sh install.sh` | **不另 clone**；venv 与 shim 指向当前仓库（开发者改 `inventory/` 与 PATH 命令是同一份）             |
 
 随后公共步骤：
@@ -112,7 +112,7 @@ agent-config sync --check
 3. `chmod +x`；若 `command -v agent-config` 失败，打印把 `$HOME/.local/bin` 加入 PATH 的提示。
 4. 再跑一次 `install.sh` = 更新：git pull（远程模式）或沿用当前仓库（本地模式），再重建/更新 venv 与 shim。
 
-Shim 必须 `exec` 安装根里的 **venv 解释器** + `scripts/agent-config`，这样 `paths.repo_root()` 仍能靠「同时存在 `inventory/` 与 `scripts/`」定位清单，无需新环境变量。可选：`AGENT_CONFIG_ROOT` 若已存在则 `repo_root()` 优先用它（测试用）；安装脚本本身不依赖它。
+Shim 必须 `exec` 安装根里的 **venv 解释器** + `scripts/agent-config`，这样 `paths.repo_root()` 仍能靠「同时存在 `inventory/` 与 `scripts/`」定位清单，无需新环境变量。可选：`AGENT_LOOM_ROOT` 若已存在则 `repo_root()` 优先用它（测试用）；安装脚本本身不依赖它。
 
 不把仓库拷到 `/usr/local/share`。不下载 GitHub Release 二进制。
 
@@ -293,7 +293,7 @@ Skills 卡状态恒为 `readonly`，不参与 check。
 
 ## 6. Skills 扫描
 
-使用 `paths.home()`（测试可设 `AGENT_CONFIG_HOME`）。扫描这些根（存在才扫）：
+使用 `paths.home()`（测试可设 `AGENT_LOOM_HOME`）。扫描这些根（存在才扫）：
 
 - `<home>/.agents/skills`
 - `<home>/.cursor/skills`
@@ -394,7 +394,7 @@ Skills 卡状态恒为 `readonly`，不参与 check。
 ## 10. 测试
 
 - `ui --help` 出现在 parser 中；无子命令或未知子命令行为与现在一致（`sync` 仍 `required` 的互斥改为 `sync`/`ui` 二选一）。
-- catalog：临时 `AGENT_CONFIG_HOME` 下造 Skills 目录（含带 `description` 的 SKILL.md），断言出现；MCP/Hooks 来自测试 inventory，缺 `description` 的清单应 schema 失败。
+- catalog：临时 `AGENT_LOOM_HOME` 下造 Skills 目录（含带 `description` 的 SKILL.md），断言出现；MCP/Hooks 来自测试 inventory，缺 `description` 的清单应 schema 失败。
 - check/apply：复用现有 tmp 宿主文件夹模式；apply 缺 `confirm` 不写文件。
 - `skills/open`：白名单外路径 400；可用 monkeypatch 避免真的 `open`。
 - 绑定地址单元断言为 `127.0.0.1`。

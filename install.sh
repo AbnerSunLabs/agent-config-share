@@ -1,11 +1,11 @@
 #!/bin/sh
 set -e
 
-REPO_URL="https://github.com/AbnerSunLabs/agent-config-share.git"
+REPO_URL="https://github.com/AbnerSunLabs/agent-loom.git"
 REPO_BRANCH="main"
-DEFAULT_SHARE="${HOME}/.local/share/agent-config-share"
-SHARE_ROOT="${AGENT_CONFIG_SHARE_ROOT:-$DEFAULT_SHARE}"
-BIN_DIR="${AGENT_CONFIG_BIN_DIR:-${HOME}/.local/bin}"
+DEFAULT_SHARE="${HOME}/.local/share/agent-loom"
+SHARE_ROOT="${AGENT_LOOM_SHARE_ROOT:-$DEFAULT_SHARE}"
+BIN_DIR="${AGENT_LOOM_BIN_DIR:-${HOME}/.local/bin}"
 
 info() { printf '%s\n' "$1"; }
 err() { printf '%s\n' "$1" >&2; exit 1; }
@@ -35,7 +35,7 @@ write_shim() {
   mkdir -p "$(dirname "$dest")"
   cat > "$dest" <<EOF
 #!/bin/sh
-exec "$root/.venv/bin/python" "$root/scripts/agent-config" "\$@"
+exec "$root/.venv/bin/python" "$root/scripts/agentloom" "\$@"
 EOF
   chmod +x "$dest"
 }
@@ -73,24 +73,24 @@ main() {
   python3 -m venv "$install_root/.venv"
   "$install_root/.venv/bin/python" -m pip install -q -r "$install_root/scripts/requirements-run.txt"
 
-  shim="$BIN_DIR/agent-config"
+  shim="$BIN_DIR/agentloom"
   if mkdir -p "$BIN_DIR" 2>/dev/null && [ -w "$BIN_DIR" ]; then
     write_shim "$install_root" "$shim"
   else
     info "需要 sudo 才能写入 /usr/local/bin"
     tmp=$(mktemp)
     write_shim "$install_root" "$tmp"
-    sudo mv "$tmp" /usr/local/bin/agent-config
-    sudo chmod +x /usr/local/bin/agent-config
-    shim=/usr/local/bin/agent-config
+    sudo mv "$tmp" /usr/local/bin/agentloom
+    sudo chmod +x /usr/local/bin/agentloom
+    shim=/usr/local/bin/agentloom
   fi
 
   info "已安装: $shim"
-  if ! command -v agent-config >/dev/null 2>&1; then
-    info "未在 PATH 中找到 agent-config。请把 $BIN_DIR 加入 PATH，例如:"
+  if ! command -v agentloom >/dev/null 2>&1; then
+    info "未在 PATH 中找到 agentloom。请把 $BIN_DIR 加入 PATH，例如:"
     info "  export PATH=\"$BIN_DIR:\$PATH\""
   fi
-  info "启动面板: agent-config ui"
+  info "启动面板: agentloom ui"
 }
 
 main "$@"

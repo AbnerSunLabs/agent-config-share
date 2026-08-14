@@ -1,4 +1,4 @@
-"""Cursor 用户级 MCP 适配器。"""
+"""starFactory 用户级 MCP 适配器。"""
 
 from __future__ import annotations
 
@@ -6,20 +6,20 @@ import json
 from pathlib import Path
 from typing import Any
 
-from agent_config.envmerge import merge_env_map, ref_for
-from agent_config.envmerge import _ref_name  # noqa: PLC2701 — 复用引用解析
-from agent_config import hookbag, jsonc
-from agent_config.models import CheckResult, HookEntry, McpEntry
-from agent_config.paths import home
+from agent_loom.envmerge import merge_env_map, ref_for
+from agent_loom.envmerge import _ref_name  # noqa: PLC2701 — 复用引用解析
+from agent_loom import hookbag, jsonc
+from agent_loom.models import CheckResult, HookEntry, McpEntry
+from agent_loom.paths import home
 
-HOST = "cursor"
+HOST = "starFactory"
 
 
 def mcp_path() -> Path:
-    return home() / ".cursor" / "mcp.json"
+    return home() / ".starFactory.json"
 
 
-def _cursor_entries(entries: list[McpEntry]) -> list[McpEntry]:
+def _host_entries(entries: list[McpEntry]) -> list[McpEntry]:
     return [e for e in entries if HOST in e.hosts]
 
 
@@ -43,7 +43,8 @@ def _merge_headers(
 
 def _upsert_server(entry: McpEntry, existing: dict[str, Any] | None) -> dict[str, Any]:
     base = dict(existing) if existing else {}
-    base["agentConfigId"] = entry.id
+    hookbag.drop_legacy_markers(base)
+    base["agentLoomId"] = entry.id
     if entry.transport == "stdio":
         base["command"] = entry.command
         base["args"] = entry.args or []
@@ -83,7 +84,7 @@ def _headers_refs_ok(headers: dict[str, str], headers_env: dict[str, str]) -> bo
 
 
 def _server_matches(entry: McpEntry, actual: dict[str, Any]) -> bool:
-    if actual.get("agentConfigId") != entry.id:
+    if actual.get("agentLoomId") != entry.id:
         return False
     if entry.transport == "stdio":
         if actual.get("command") != entry.command:
@@ -104,7 +105,7 @@ def _server_matches(entry: McpEntry, actual: dict[str, Any]) -> bool:
 def _load_data() -> tuple[dict[str, Any] | None, bool]:
     path = mcp_path()
     if not path.exists():
-        return None, False
+        return None, True
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
@@ -121,7 +122,6 @@ def _load_data() -> tuple[dict[str, Any] | None, bool]:
 
 def _write_data(data: dict[str, Any]) -> None:
     path = mcp_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(data, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
@@ -129,18 +129,23 @@ def _write_data(data: dict[str, Any]) -> None:
 
 
 def check_mcp(entries: list[McpEntry]) -> CheckResult:
+    wanted = _host_entries(entries)
+    path = mcp_path()
+    if not path.exists():
+        if not wanted:
+            return CheckResult(gaps=[], drift=[], file_error=False)
+        return CheckResult.fail(path)
+
     data, file_error = _load_data()
     if file_error:
-        return CheckResult.fail(mcp_path())
+        return CheckResult.fail(path)
 
-    wanted = _cursor_entries(entries)
+    wanted = _host_entries(entries)
     wanted_ids = {e.id for e in wanted}
     gaps: list[str] = []
     drift: list[str] = []
 
-    servers: dict[str, Any] = {}
-    if data is not None:
-        servers = data.get("mcpServers", {})
+    servers: dict[str, Any] = data.get("mcpServers", {}) if data is not None else {}
 
     for entry in wanted:
         actual = servers.get(entry.id)
@@ -152,7 +157,7 @@ def check_mcp(entries: list[McpEntry]) -> CheckResult:
     for name, srv in servers.items():
         if not isinstance(srv, dict):
             continue
-        marker = srv.get("agentConfigId")
+        marker = srv.get("agentLoomId")
         if not marker:
             continue
         if marker not in wanted_ids:
@@ -167,14 +172,11 @@ def check_mcp(entries: list[McpEntry]) -> CheckResult:
 
 def apply_mcp(entries: list[McpEntry], prune: bool) -> None:
     data, file_error = _load_data()
-    if file_error:
+    if file_error or data is None:
         return
 
-    if data is None:
-        data = {"mcpServers": {}}
-
     servers: dict[str, Any] = data.setdefault("mcpServers", {})
-    wanted = _cursor_entries(entries)
+    wanted = _host_entries(entries)
     wanted_ids = {e.id for e in wanted}
 
     for entry in wanted:
@@ -188,7 +190,7 @@ def apply_mcp(entries: list[McpEntry], prune: bool) -> None:
         for name, srv in servers.items():
             if not isinstance(srv, dict):
                 continue
-            marker = srv.get("agentConfigId")
+            marker = srv.get("agentLoomId")
             if not marker:
                 continue
             if marker not in wanted_ids:
@@ -204,17 +206,17 @@ def apply_mcp(entries: list[McpEntry], prune: bool) -> None:
 
 
 def hooks_path() -> Path:
-    return home() / ".cursor" / "hooks.json"
+    return home() / ".starFactory" / "settings.json"
 
 
-def _cursor_hook_entries(entries: list[HookEntry]) -> list[HookEntry]:
+def _host_hook_entries(entries: list[HookEntry]) -> list[HookEntry]:
     return [e for e in entries if HOST in e.hosts]
 
 
 def _load_hooks_data() -> tuple[dict[str, Any] | None, bool]:
     path = hooks_path()
     if not path.exists():
-        return None, False
+        return None, True
     try:
         raw = jsonc.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError, ValueError):
@@ -231,7 +233,6 @@ def _load_hooks_data() -> tuple[dict[str, Any] | None, bool]:
 
 def _write_hooks_data(data: dict[str, Any]) -> None:
     path = hooks_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(data, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
@@ -239,18 +240,21 @@ def _write_hooks_data(data: dict[str, Any]) -> None:
 
 
 def check_hooks(entries: list[HookEntry]) -> CheckResult:
+    wanted = _host_hook_entries(entries)
+    path = hooks_path()
+    if not path.exists():
+        if not wanted:
+            return CheckResult(gaps=[], drift=[], file_error=False)
+        return CheckResult.fail(path)
+
     data, file_error = _load_hooks_data()
     if file_error:
-        return CheckResult.fail(hooks_path())
+        return CheckResult.fail(path)
 
-    wanted = _cursor_hook_entries(entries)
     wanted_ids = {e.id for e in wanted}
     gaps: list[str] = []
     drift: list[str] = []
-
-    hooks: Any = []
-    if data is not None:
-        hooks = data.get("hooks", [])
+    hooks: Any = data.get("hooks", []) if data is not None else []
 
     for entry in wanted:
         loc = hookbag.find_hook(hooks, entry, HOST)
@@ -263,7 +267,7 @@ def check_hooks(entries: list[HookEntry]) -> CheckResult:
             gaps.append(entry.id)
 
     for bucket, i, hook in hookbag.iter_hooks(hooks):
-        marker = hook.get("agentConfigId")
+        marker = hook.get("agentLoomId")
         if not marker:
             continue
         if marker not in wanted_ids:
@@ -273,23 +277,17 @@ def check_hooks(entries: list[HookEntry]) -> CheckResult:
         if HOST not in entry.hosts:
             drift.append(marker)
 
-    if data is None and wanted:
-        gaps = [e.id for e in wanted]
-
     return CheckResult(gaps=gaps, drift=drift, file_error=False)
 
 
 def apply_hooks(entries: list[HookEntry], prune: bool) -> None:
     data, file_error = _load_hooks_data()
-    if file_error:
+    if file_error or data is None:
         return
-
-    if data is None:
-        data = {"hooks": []}
 
     hooks: Any = data.setdefault("hooks", [])
     map_mode = isinstance(hooks, dict)
-    wanted = _cursor_hook_entries(entries)
+    wanted = _host_hook_entries(entries)
     wanted_ids = {e.id for e in wanted}
 
     for entry in wanted:
@@ -303,7 +301,7 @@ def apply_hooks(entries: list[HookEntry], prune: bool) -> None:
 
     if prune:
         def _keep(h: dict[str, Any]) -> bool:
-            marker = h.get("agentConfigId")
+            marker = h.get("agentLoomId")
             if not marker:
                 return True
             if marker not in wanted_ids:
