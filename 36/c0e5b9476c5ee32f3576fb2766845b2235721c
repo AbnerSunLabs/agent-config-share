@@ -1,0 +1,21 @@
+scripts/agent_loom/adapters/codex.py
+  s_729564a87e3c5f::t_a1cb8b99715019 6,18,25-31,38,42,68-70,82,85
+tests/agent_loom/test_codex_mcp.py
+  s_729564a87e3c5f::t_2ea566e9b51cdf 7-82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "36c0e5b9476c5ee32f3576fb2766845b2235721c",
+  "prompts": {},
+  "sessions": {
+    "s_729564a87e3c5f": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "318cabde-a8d9-4704-9926-f608d7ff375f",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunyujiejohn@sina.com>"
+    }
+  }
+}
