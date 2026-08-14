@@ -1,0 +1,114 @@
+scripts/agent_loom/ui.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-227
+tests/agent_loom/test_hooks.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-93
+inventory/README.md
+  h_245285a78fca97 12,37-38
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 18-24,27,36
+tests/agent_loom/test_load_inventory.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-27
+tests/agent_loom/test_starfactory_mcp.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-118
+tests/agent_loom/test_notify.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-89
+scripts/agent_loom/sync.py
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 176
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-175,177-205
+scripts/agent_loom/paths.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-27
+scripts/agent_loom/cli.py
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 1,13
+  s_8ecdeb6a807012::t_afbdd1d047b98b 2-12,14-97
+install.sh
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 38,76,83-85,89-90,93
+  s_47854fb36533ce::t_9ce591ac05df4f 4,6-8
+scripts/agent_loom/adapters/cursor.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-316
+README.md
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 91
+  s_8ecdeb6a807012::t_57ffd1a775633d 90
+  s_47854fb36533ce::t_e851f1a527ad37 27
+tests/agent_loom/test_codex_mcp.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-111
+scripts/agent_loom/envmerge.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-45
+scripts/agent_loom/schema.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-171
+tests/agent_loom/test_cli.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-183
+scripts/agent_loom/ui_catalog.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-197
+tests/agent_loom/test_jsonc.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-19
+tests/agent_loom/test_schema.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-34
+scripts/agent_loom/models.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-53
+.cursor/rules/agentloom-names.mdc
+  h_245285a78fca97 1-12
+tests/agent_loom/conftest.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-5
+tests/agent_loom/test_envmerge.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-16
+scripts/agent_loom/redact.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-26
+tests/agent_loom/test_install.py
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 32,48,52
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-31,33-47,49-51
+scripts/agent_loom/jsonc.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-50
+DESIGN.md
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 2,7
+tests/agent_loom/test_cursor_mcp.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-162
+  s_47854fb36533ce::t_7ddda40f6d3027 171,182
+scripts/agent_loom/hookbag.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-155
+tests/agent_loom/test_ui.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-195,197-202
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 196
+scripts/agent_loom/adapters/starfactory.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-313
+scripts/agent_loom/ui_static/index.html
+  s_8ecdeb6a807012::t_671fdbcd0d54a2 6,15,1329
+  s_8ecdeb6a807012::t_4ceb159200f704 1-5,7-14,16-1328,1330-1372
+scripts/agent_loom/adapters/codex.py
+  s_8ecdeb6a807012::t_afbdd1d047b98b 1-551
+scripts/agentloom
+  s_8ecdeb6a807012::t_b81d356806e8a2 5
+docs/superpowers/plans/2026-08-13-agent-config-mcp-hooks-share.md
+  s_47854fb36533ce::t_1461de0c89d1e4 7,17,32,54,107,284,294,300,304,308,325,359,368,375,385,428,438,448,467,509,521
+docs/superpowers/specs/2026-08-13-agent-config-mcp-hooks-share-design.md
+  s_47854fb36533ce::t_6984951fbc3e9e 88-89,96-98,123,236
+docs/superpowers/specs/2026-08-14-agent-config-ui-design.md
+  s_47854fb36533ce::t_b06554c4047ec0 86,99,105,115,296,397
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f9e499556a703dbd1949a08949803b85927bc24f",
+  "prompts": {},
+  "humans": {
+    "h_245285a78fca97": {
+      "author": "AbnerSun <sunyujiejohn@sina.com>"
+    }
+  },
+  "sessions": {
+    "s_47854fb36533ce": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "d1938f3f-88de-44f7-b6f9-d2607cad0eab",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunyujiejohn@sina.com>"
+    },
+    "s_8ecdeb6a807012": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "07adc04a-b596-42d5-b608-a5237b56739d",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "AbnerSun <sunyujiejohn@sina.com>"
+    }
+  }
+}
