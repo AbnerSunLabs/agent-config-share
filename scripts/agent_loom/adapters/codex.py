@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -14,10 +15,18 @@ from agent_loom.models import CheckResult, HookEntry, McpEntry
 from agent_loom.paths import home
 
 HOST = "codex"
+_BARE_TOML_KEY = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def mcp_path() -> Path:
     return home() / ".codex" / "config.toml"
+
+
+def _quote_toml_key(key: str) -> str:
+    """TOML 裸键只允许字母数字、-、_；路径和 @ 必须加引号。"""
+    if _BARE_TOML_KEY.fullmatch(key):
+        return key
+    return json.dumps(key, ensure_ascii=False)
 
 
 def dump_toml(doc: dict[str, Any]) -> str:
@@ -26,11 +35,11 @@ def dump_toml(doc: dict[str, Any]) -> str:
 
     for key, value in doc.items():
         if not isinstance(value, dict):
-            lines.append(f"{key} = {_format_toml_value(value)}")
+            lines.append(f"{_quote_toml_key(key)} = {_format_toml_value(value)}")
 
     for key, value in doc.items():
         if isinstance(value, dict):
-            _dump_nested_tables(key, value, lines)
+            _dump_nested_tables(_quote_toml_key(key), value, lines)
 
     if not lines:
         return "\n"
@@ -56,7 +65,9 @@ def _format_toml_value(value: Any) -> str:
 
 
 def _format_inline_table(table: dict[str, Any]) -> str:
-    parts = [f"{k} = {_format_toml_value(v)}" for k, v in table.items()]
+    parts = [
+        f"{_quote_toml_key(k)} = {_format_toml_value(v)}" for k, v in table.items()
+    ]
     return "{" + ", ".join(parts) + "}"
 
 
@@ -68,10 +79,10 @@ def _dump_nested_tables(parent: str, table: dict[str, Any], lines: list[str]) ->
         lines.append("")
         lines.append(f"[{parent}]")
         for k, v in scalars.items():
-            lines.append(f"{k} = {_format_toml_value(v)}")
+            lines.append(f"{_quote_toml_key(k)} = {_format_toml_value(v)}")
 
     for name, content in nested.items():
-        _dump_nested_tables(f"{parent}.{name}", content, lines)
+        _dump_nested_tables(f"{parent}.{_quote_toml_key(name)}", content, lines)
 
 
 def _host_entries(entries: list[McpEntry]) -> list[McpEntry]:
