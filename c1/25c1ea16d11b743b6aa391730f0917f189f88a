@@ -1,0 +1,85 @@
+scripts/agent_config/ui.py
+  h_14565e8b179df6 1-227
+install.sh
+  h_14565e8b179df6 1-96
+scripts/agent_config/ui_static/index.html
+  h_14565e8b179df6 1-1146
+tests/agent_config/test_ui.py
+  h_14565e8b179df6 1-202
+DESIGN.md
+  h_14565e8b179df6 1-29
+docs/superpowers/specs/2026-08-14-agent-config-ui-design.md
+  h_14565e8b179df6 1-414
+tests/agent_config/test_schema.py
+  h_14565e8b179df6 7,12,15,19-28,33
+  s_c0b98f5f04b674::t_a3d2485892be29 29-30
+.cursor/rules/ui-layout-sketches.mdc
+  h_14565e8b179df6 1-22
+tests/agent_config/test_hooks.py
+  s_78d52a14f36c9d::t_3a00a22ea2fa50 12,24,36,49,81
+.gitignore
+  s_c0b98f5f04b674::t_8d560c442fc9d9 5
+README.md
+  s_c0b98f5f04b674::t_692b1e78a1bf75 85-95
+docs/superpowers/specs/2026-08-13-agent-config-mcp-hooks-share-design.md
+  s_c0b98f5f04b674::t_e54cf999a6e49e 31
+docs/superpowers/specs/2026-08-13-agent-config-unification-design.md
+  s_c0b98f5f04b674::t_253a022d0c77b4 1-277
+inventory/README.md
+  s_c0b98f5f04b674::t_fab1c646a2c6ab 9,12,15-28,36
+inventory/hooks.yaml
+  s_c0b98f5f04b674::t_ed8cca3c15aef1 7,24,41,52,64
+inventory/mcp.yaml
+  s_c0b98f5f04b674::t_ad511575ce74ad 6,12,19,27,33,39
+scripts/agent_config/cli.py
+  s_c0b98f5f04b674::t_bf8b291f44f77d 46-57,64-68
+scripts/agent_config/models.py
+  s_c0b98f5f04b674::t_854d363a40c176 11,41
+scripts/agent_config/paths.py
+  s_c0b98f5f04b674::t_2d2728b7520a11 7-9
+scripts/agent_config/schema.py
+  s_c0b98f5f04b674::t_d961fbd51f78b4 79,111,138,160
+scripts/agent_config/ui_catalog.py
+  s_c0b98f5f04b674::t_5459a338818e3a 1-197
+scripts/requirements-run.txt
+  s_c0b98f5f04b674::t_1f86875e221b0b 1
+tests/agent_config/test_cli.py
+  s_c0b98f5f04b674::t_db66e692a97996 74,94,133,166
+tests/agent_config/test_codex_mcp.py
+  s_c0b98f5f04b674::t_03706fa68391db 17,40,63,87
+tests/agent_config/test_cursor_mcp.py
+  s_c0b98f5f04b674::t_4143be5c165e65 14,74,97,152
+tests/agent_config/test_install.py
+  s_c0b98f5f04b674::t_abd972868046b2 1-52
+tests/agent_config/test_starfactory_mcp.py
+  s_c0b98f5f04b674::t_ef546492c28cc2 14,36,61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c125c1ea16d11b743b6aa391730f0917f189f88a",
+  "prompts": {},
+  "humans": {
+    "h_14565e8b179df6": {
+      "author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  },
+  "sessions": {
+    "s_78d52a14f36c9d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "14ad2651-987c-411d-ae22-141bf1f8b57d",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    },
+    "s_c0b98f5f04b674": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a98e6b61-5031-4718-9af4-931c1c5ed967",
+        "model": "unknown"
+      },
+      "human_author": "AbnerSun <sunjj11@chinatelecom.cn>"
+    }
+  }
+}
